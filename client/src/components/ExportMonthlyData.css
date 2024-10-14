@@ -1,0 +1,106 @@
+/* General container styling */
+.export-monthly-data-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+/* Title styling */
+.export-monthly-data-container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+/* Error message styling */
+.export-monthly-data-container p {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Date picker styling */
+.date-picker-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.date-picker-container label {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+.date-picker-container input[type="date"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.date-picker-container button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.date-picker-container button:hover {
+    background-color: #45a049;
+}
+
+/* Table styling */
+.monthly-attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.monthly-attendance-table th,
+.monthly-attendance-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.monthly-attendance-table th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
+
+.monthly-attendance-table td {
+    background-color: #fff;
+    color: #333;
+}
+
+/* Responsive table styling for small screens */
+@media screen and (max-width: 768px) {
+    .monthly-attendance-table th,
+    .monthly-attendance-table td {
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    .date-picker-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .date-picker-container input[type="date"] {
+        margin-bottom: 10px;
+    }
+
+    .export-monthly-data-container h2 {
+        font-size: 18px;
+    }
+}

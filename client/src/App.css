@@ -1,0 +1,12 @@
+.App {
+  text-align: center;
+  background-color: #f0f4f8; /* Light background color for the whole app */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+input, button {
+  font-family: Arial, sans-serif;
+}

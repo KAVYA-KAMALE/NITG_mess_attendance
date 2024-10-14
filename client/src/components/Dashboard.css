@@ -1,0 +1,52 @@
+/* Styles for the Dashboard component */
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f0f4f8;
+}
+
+h2 {
+    color: #007bff; /* Blue color for the heading */
+    margin-bottom: 30px;
+}
+
+.dashboard-links {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.dashboard-link {
+    text-decoration: none;
+    color: #fff;
+    background-color: #007bff;
+    padding: 15px 25px;
+    border-radius: 5px;
+    font-size: 18px;
+    transition: background-color 0.3s;
+}
+
+.dashboard-link:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.logout-button {
+    text-decoration: none;
+    color: #fff;
+    background-color: #dc3545; /* Red color for the logout button */
+    padding: 15px 25px;
+    border-radius: 5px;
+    font-size: 18px;
+    border: none; /* Remove default border */
+    cursor: pointer; /* Change cursor to pointer */
+    transition: background-color 0.3s;
+    margin-top: 20px; /* Add space between button and links above */
+}
+
+.logout-button:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
