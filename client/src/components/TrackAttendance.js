@@ -12,7 +12,8 @@ const TrackAttendance = () => {
     // Fetch attendance records from the API
     const fetchAttendanceRecords = async () => {
         try {
-            const response = await axios.get('http://localhost:4000/api/attendance/track-attendance');
+            const trackAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/track-attendance`;
+            const response = await axios.get(trackAttendanceEndpoint);
             setAttendanceRecords(response.data);
         } catch (error) {
             setError('Error fetching attendance records');
@@ -68,7 +69,8 @@ const TrackAttendance = () => {
 
     // Handle downloading the attendance records as an Excel file
     const downloadExcel = () => {
-        window.open('http://localhost:4000/api/attendance/export-attendance');
+        const exportAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/export-attendance`;
+        window.open(exportAttendanceEndpoint);
     };    
 
     // Group attendance records by date

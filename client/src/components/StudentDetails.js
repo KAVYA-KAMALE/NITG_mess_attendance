@@ -15,7 +15,8 @@ const StudentDetails = () => {
     const fetchStudentDetails = async (id) => {
         setLoading(true);
         try {
-            const response = await axios.get(`http://localhost:4000/api/students/details/${id}`);
+            const studentDetailsEndpoint = `${process.env.REACT_APP_LINK}/api/students/details/${id}`;
+            const response = await axios.get(studentDetailsEndpoint);
             setStudent(response.data);
             setError('');
         } catch (err) {

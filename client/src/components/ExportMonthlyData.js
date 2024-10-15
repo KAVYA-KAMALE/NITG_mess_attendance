@@ -15,7 +15,8 @@ const ExportMonthlyData = () => {
     // Fetch attendance records from the API
     const fetchAttendanceRecords = async () => {
         try {
-            const response = await axios.get('http://localhost:4000/api/attendance/track-attendance');
+            const trackAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/track-attendance`;
+            const response = await axios.get(trackAttendanceEndpoint);
             setAttendanceRecords(response.data);
             fetchStudentDetails(response.data); 
         } catch (error) {
@@ -26,8 +27,9 @@ const ExportMonthlyData = () => {
     const fetchStudentDetails = async (records) => {
         const uniqueIds = [...new Set(records.map(record => record.uniqueId))];
         try {
+            const studentDetailsEndpoint = `${process.env.REACT_APP_LINK}/api/students/details/${id}`;
             const responses = await Promise.all(
-                uniqueIds.map(id => axios.get(`http://localhost:4000/api/students/details/${id}`))
+                uniqueIds.map(id => axios.get(studentDetailsEndpoint))
             );
             const details = {};
             responses.forEach(response => {

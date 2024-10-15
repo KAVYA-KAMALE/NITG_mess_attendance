@@ -22,7 +22,8 @@ const MarkAttendance = () => {
 
         try {
             // Send both date and time to the API
-            const response = await axios.post('http://localhost:4000/api/attendance/mark-attendance', { 
+            const markAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/mark-attendance`;
+            const response = await axios.post(markAttendanceEndpoint, { 
                 uniqueId, 
                 status: 'Present',
                 date,

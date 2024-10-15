@@ -9,6 +9,7 @@ const AdminLogin = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+    const endpoint = `${process.env.REACT_APP_LINK}/api/auth/login`;
 
     useEffect(() => {
         // Redirect to dashboard if token is already present (meaning user is logged in)
@@ -20,7 +21,7 @@ const AdminLogin = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:4000/api/auth/login', {
+            const res = await axios.post(endpoint, {
                 username,
                 password
             });

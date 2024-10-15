@@ -9,6 +9,7 @@ const AdminRegister = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+    const endpoint = `${process.env.REACT_APP_LINK}/api/auth/register`;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -20,7 +21,7 @@ const AdminRegister = () => {
 
         try {
             // Make a POST request to the backend to register the admin
-            const res = await axios.post('http://localhost:4000/api/auth/register', {
+            const res = await axios.post(endpoint, {
                 username,
                 password
             });

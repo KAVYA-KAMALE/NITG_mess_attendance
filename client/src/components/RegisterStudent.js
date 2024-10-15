@@ -28,6 +28,9 @@ const RegisterStudent = () => {
     // State for messages
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const studentRegisterEndpoint = `${process.env.REACT_APP_LINK}/api/students/register`;
+    const studentUnRegisterEndpoint = `${process.env.REACT_APP_LINK}/api/students/unregister`;
+    const studentUpdateEndpoint = `${process.env.REACT_APP_LINK}/api/students/update`;
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -44,7 +47,7 @@ const RegisterStudent = () => {
         }
 
         try {
-            await axios.post('http://localhost:4000/api/students/register', formData, {
+            await axios.post(studentRegisterEndpoint, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data' // Set the content type
                 }
@@ -66,7 +69,7 @@ const RegisterStudent = () => {
     const handleUnregister = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:4000/api/students/unregister', { uniqueId: unregisterId });
+            await axios.post(studentUnRegisterEndpoint, { uniqueId: unregisterId });
             setMessage('Student unregistered successfully!');
             setError('');
             // Clear the uniqueId field
@@ -80,7 +83,8 @@ const RegisterStudent = () => {
     const handleUpdateFetch = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.get(`http://localhost:4000/api/students/details/${updateId}`);
+            const studentUpdateFetchEndpoint = `${process.env.REACT_APP_LINK}/api/students/details/${updateId}`; 
+            const res = await axios.get(studentUpdateFetchEndpoint);
             const student = res.data;
             setUpdateName(student.name || '');
             setUpdateRollNo(student.rollNo || '');
@@ -98,7 +102,7 @@ const RegisterStudent = () => {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            await axios.put('http://localhost:4000/api/students/update', {
+            await axios.put(studentUpdateEndpoint, {
                 uniqueId: updateId,
                 name: updateName,
                 rollNo: updateRollNo,
