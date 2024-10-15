@@ -27,9 +27,8 @@ const ExportMonthlyData = () => {
     const fetchStudentDetails = async (records) => {
         const uniqueIds = [...new Set(records.map(record => record.uniqueId))];
         try {
-            const studentDetailsEndpoint = `${process.env.REACT_APP_LINK}/api/students/details/${id}`;
             const responses = await Promise.all(
-                uniqueIds.map(id => axios.get(studentDetailsEndpoint))
+                uniqueIds.map(id => axios.get(`${process.env.REACT_APP_LINK}/api/students/details/${id}`))
             );
             const details = {};
             responses.forEach(response => {
@@ -43,6 +42,7 @@ const ExportMonthlyData = () => {
 
     useEffect(() => {
         fetchAttendanceRecords();
+        // eslint-disable-next-line
     }, []);
 
     const groupByStudent = (records) => {
