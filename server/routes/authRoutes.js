@@ -3,7 +3,9 @@ const { loginAdmin, registerAdmin } = require('../controllers/authController');
 const router = express.Router();
 const Admin = require('../models/Admin');
 const nodemailer = require('nodemailer');
-const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+//const crypto = require('crypto');
 
 router.post('/register', async (req, res) => {
     const { username, password } = req.body;

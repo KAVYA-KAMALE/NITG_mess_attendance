@@ -8,7 +8,10 @@
   
   "scripts": {
   
+    
   "start": "nodemon index.js",
+  
+    
   "test": "echo \"Error: no test specified\" && exit 1"
   
   },
@@ -22,6 +25,9 @@
   "description": "",
   
   "dependencies": {
+  
+    
+  "bcrypt": "^5.1.1",
   
     
   "bcryptjs": "^2.4.3",
