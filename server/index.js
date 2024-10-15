@@ -4,6 +4,9 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const os = require('os');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -18,8 +21,11 @@ app.get("/",(req,res)=>{
 })
 
 // Serve static files from the uploads directory
-app.use('/uploads', express.static('uploads'));
-
+const uploadsDir = path.join(os.tmpdir(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+app.use(express.static("uploads"));
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
