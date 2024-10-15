@@ -13,10 +13,22 @@ const AdminLogin = () => {
 
     useEffect(() => {
         // Redirect to dashboard if token is already present (meaning user is logged in)
+        getMethod();        
         if (localStorage.getItem('authToken')) {
             navigate('/dashboard');
         }
     }, [navigate]);
+
+    const getMethod = async()=>{
+        try {
+            const uri = `${process.env.REACT_APP_LINK}`;
+            console.log("uri: ",uri);
+            const response = await axios.get(uri)
+            console.log(response.data);
+        } catch (error) {
+            console.log("Error: ",error);
+        }
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
