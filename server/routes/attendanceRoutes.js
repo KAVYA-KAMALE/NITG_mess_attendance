@@ -76,7 +76,24 @@ router.get('/export-attendance', async (req, res) => {
       ];
 
       // Helper function to determine meal type from time
-      const getMealType = (time) => {
+    const getMealType = (time) => {
+    const momentTime = moment(time, 'hh:mm:ss A'); // Parse time using moment.js
+
+    if (!momentTime.isValid()) {
+        console.error('Invalid time:', time);
+        return 'No Meal';
+    }
+
+    const totalMinutes = momentTime.hours() * 60 + momentTime.minutes();
+
+    if (totalMinutes >= 450 && totalMinutes < 570) return 'Breakfast'; // 7:30 AM to 9:30 AM
+    if (totalMinutes >= 720 && totalMinutes < 840) return 'Lunch';     // 12:00 PM to 2:00 PM
+    if (totalMinutes >= 1020 && totalMinutes < 1080) return 'Snacks';  // 5:00 PM to 6:00 PM
+    if (totalMinutes >= 1170 && totalMinutes < 1260) return 'Dinner';  // 7:30 PM to 9:00 PM
+    return 'No Meal';
+};
+
+     /* const getMealType = (time) => {
           const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
           if (!timeParts) return 'No Meal';
 
@@ -94,7 +111,7 @@ router.get('/export-attendance', async (req, res) => {
           if (totalMinutes >= 1020 && totalMinutes < 1080) return 'Snacks';  // 5:00 PM to 6:00 PM
           if (totalMinutes >= 1170 && totalMinutes < 1260) return 'Dinner';  // 7:30 PM to 9:00 PM
           return 'No Meal';
-      };
+      };*/
 
       // Add rows to the worksheet from attendance records
       attendanceRecords.forEach(record => {
