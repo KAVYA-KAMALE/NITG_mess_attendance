@@ -2,7 +2,6 @@ const express = require('express');
 const Attendance = require('../models/Attendance');
 const Student = require('../models/Student');
 const excel = require('exceljs'); // Add exceljs for Excel export
-const moment = require('moment'); // For date manipulation
 const router = express.Router();
 
 // Route to mark attendance
@@ -23,8 +22,14 @@ router.post('/mark-attendance', async (req, res) => {
       return res.status(404).send('Student not found');
     }
 
-    // Get the current time when marking attendance
-    const currentTime = new Date().toLocaleTimeString(); // Format: "HH:MM:SS AM/PM"
+    // Get the current time when marking attendance in IST
+    const currentTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    }).format(new Date());
 
     // Create new attendance record with student details and time
     const attendance = new Attendance({
@@ -59,7 +64,7 @@ router.get('/export-attendance', async (req, res) => {
       const attendanceRecords = await Attendance.find();
 
       // Create a new Excel workbook and worksheet
-      const workbook = new ExcelJS.Workbook();
+      const workbook = new excel.Workbook();
       const worksheet = workbook.addWorksheet('Attendance Records');
 
       // Define columns in the worksheet
@@ -76,8 +81,7 @@ router.get('/export-attendance', async (req, res) => {
       ];
 
       // Helper function to determine meal type from time
-
-     const getMealType = (time) => {
+      const getMealType = (time) => {
           const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
           if (!timeParts) return 'No Meal';
 
