@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import axios from 'axios';
 import './TrackAttendance.css'; // Add CSS styling
 
@@ -95,7 +95,11 @@ const TrackAttendance = () => {
         if (period === 'PM' && hours < 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
 
-        const totalMinutes = (hours * 60) + minutes;
+        // Add 5 hours and 30 minutes to the UTC time
+        const adjustedHours = (hours + 5 + Math.floor((minutes + 30) / 60)) % 24;
+        const adjustedMinutes = (minutes + 30) % 60;
+
+        const totalMinutes = (adjustedHours * 60) + adjustedMinutes;
 
         if (totalMinutes >= 450 && totalMinutes < 570) { // Breakfast 7:30 AM to 9:30 AM
             return 'Breakfast';
@@ -198,27 +202,34 @@ const TrackAttendance = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {groupedRecords[date].map(record => (
-                                    <tr key={record._id}>
-                                        <td>{record.uniqueId}</td>
-                                        <td>{record.rollNo}</td>
-                                        <td>{record.time}</td>
-                                        <td>{getMealType(record.time)}</td>
-                                        <td>{getMealStatus(record, 'Breakfast')}</td>
-                                        <td>{getMealStatus(record, 'Lunch')}</td>
-                                        <td>{getMealStatus(record, 'Snacks')}</td>
-                                        <td>{getMealStatus(record, 'Dinner')}</td>
-                                    </tr>
-                                ))}
+                                {groupedRecords[date].map(record => {
+                                    // Adjust the time display for each record
+                                    const adjustedTime = new Date(record.time);
+                                    adjustedTime.setHours(adjustedTime.getHours() + 5);
+                                    adjustedTime.setMinutes(adjustedTime.getMinutes() + 30);
+                                    
+                                    return (
+                                        <tr key={record._id}>
+                                            <td>{record.uniqueId}</td>
+                                            <td>{record.rollNo}</td>
+                                            <td>{adjustedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td> {/* Adjusted time */}
+                                            <td>{getMealType(record.time)}</td>
+                                            <td>{getMealStatus(record, 'Breakfast')}</td>
+                                            <td>{getMealStatus(record, 'Lunch')}</td>
+                                            <td>{getMealStatus(record, 'Snacks')}</td>
+                                            <td>{getMealStatus(record, 'Dinner')}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
                 ))
             ) : (
-                <p>No attendance records found</p>
+                <p>No attendance records found.</p>
             )}
 
-            <button onClick={downloadExcel} className="download-button">Download as Excel</button>
+            <button onClick={downloadExcel} className="download-button">Download Attendance</button>
         </div>
     );
 };
