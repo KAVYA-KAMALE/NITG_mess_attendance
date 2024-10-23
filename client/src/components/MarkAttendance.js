@@ -30,16 +30,14 @@ const MarkAttendance = () => {
                 time
             });
             setMessage(response.data);
+
+            // Clear input field and set focus back to it for next input
+            setUniqueId('');
+            inputRef.current.focus(); // Refocus input field automatically
         } catch (error) {
             console.error('Error:', error.response?.data || error.message);
             setMessage(error.response?.data || 'Error marking attendance');
         }
-    };
-
-    const handleReset = () => {
-        setUniqueId(''); // Clear the input field
-        setMessage('');  // Clear any message
-        inputRef.current.focus(); // Set focus back to the input field
     };
 
     return (
@@ -51,10 +49,10 @@ const MarkAttendance = () => {
                 onChange={(e) => setUniqueId(e.target.value)}
                 placeholder="Enter Unique ID"
                 required
+                autoFocus // Automatically focus on component load
             />
             <div className="button-group">
                 <button type="submit">Mark Attendance</button>
-                <button type="button" onClick={handleReset}>Reset</button> {/* Reset button */}
             </div>
             {message && <p>{message}</p>}
         </form>
