@@ -95,20 +95,6 @@ const StudentDetails = () => {
                     <p><strong>Semester:</strong> {student.semester}</p>
                     <p><strong>Phone No:</strong> {student.phoneNo}</p>
                     <p><strong>Fee Paid:</strong> {student.feePaid}</p>
-                    {student.photo && (
-                        <div>
-                            <strong>Photo:</strong>
-                            <img 
-                                src={`http://localhost:4000/${student.photo}`} // Updated path
-                                alt="Student" 
-                                onError={(e) => { 
-                                    e.target.onerror = null; 
-                                    e.target.src='/path/to/fallback-image.jpg'; // Fallback image path
-                                }} 
-                                style={{ width: '150px', height: '150px' }} 
-                            />
-                        </div>
-                    )}
                 </div>
             )}
             {error && <p className="error-message">{error}</p>}
