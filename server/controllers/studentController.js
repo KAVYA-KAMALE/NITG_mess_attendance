@@ -2,7 +2,6 @@ const Student = require('../models/Student');
 
 exports.registerStudent = async (req, res) => {
     const { uniqueId, name, rollNo, branch, semester, phoneNo, feePaid } = req.body;
-    const photoPath = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
         const newStudent = new Student({
@@ -13,7 +12,6 @@ exports.registerStudent = async (req, res) => {
             semester,
             phoneNo,
             feePaid,
-            photo: photoPath,
         });
 
         await newStudent.save();
