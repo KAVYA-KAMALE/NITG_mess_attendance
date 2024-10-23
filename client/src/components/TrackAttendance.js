@@ -9,7 +9,7 @@ const TrackAttendance = () => {
     const [searchColumn, setSearchColumn] = useState('uniqueId'); // State for chosen column
     const [selectedDate, setSelectedDate] = useState(''); // State for date selection
 
-    // Fetch attendance records from the API using the environment variable for base URL
+    // Fetch attendance records from the API
     const fetchAttendanceRecords = async () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_LINK}/api/attendance/track-attendance`);
@@ -43,8 +43,9 @@ const TrackAttendance = () => {
                         return record.rollNo && record.rollNo.includes(query);
                     case 'date':
                         const inputDate = new Date(query).toLocaleDateString();  // Format as mm/dd/yyyy
-                        const recordDate = new Date(record.date).toLocaleDateString();  // Format as mm/dd/yyyy
-                        return recordDate === inputDate;
+                        const recordDate = new Date(record.date).toLocaleDateString();  // Also format as mm/dd/yyyy
+
+                        return recordDate === inputDate;  // Compare formatted dates
                     case 'meal':
                         const mealType = getMealType(record.time);
                         return mealType && mealType.toLowerCase().includes(query.toLowerCase());
@@ -83,40 +84,55 @@ const TrackAttendance = () => {
     };
 
     // Determine the meal based on the time
-// Modify getMealType function to display time correctly based on the current timezone
-const getMealType = (time) => {
-    const [hours, minutes] = time.split(':').map(Number);
-    const totalMinutes = (hours % 12) * 60 + minutes;
+    const getMealType = (time) => {
+        const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
+        if (!timeParts) return 'No Meal';
 
-    if (totalMinutes >= 450 && totalMinutes < 570) { // Breakfast 7:30 AM to 9:30 AM
-        return 'Breakfast';
-    } else if (totalMinutes >= 720 && totalMinutes < 840) { // Lunch 12:00 PM to 2:00 PM
-        return 'Lunch';
-    } else if (totalMinutes >= 1020 && totalMinutes < 1080) { // Snacks 5:00 PM to 6:00 PM
-        return 'Snacks';
-    } else if (totalMinutes >= 1170 && totalMinutes < 1260) { // Dinner 7:30 PM to 9:00 PM
-        return 'Dinner';
-    } else {
-        return 'No Meal';
-    }
-};
+        let hours = parseInt(timeParts[1]);
+        const minutes = parseInt(timeParts[2]);
+        const period = timeParts[3]; // AM or PM
 
-// Function to properly format the date/time
-const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
+        if (period === 'PM' && hours < 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
 
-    // Use Intl.DateTimeFormat to format the date/time to the local time zone
-    return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-    }).format(date);
-};
+        const totalMinutes = (hours * 60) + minutes;
 
+        if (totalMinutes >= 450 && totalMinutes < 570) { // Breakfast 7:30 AM to 9:30 AM
+            return 'Breakfast';
+        } else if (totalMinutes >= 720 && totalMinutes < 840) { // Lunch 12:00 PM to 2:00 PM
+            return 'Lunch';
+        } else if (totalMinutes >= 1020 && totalMinutes < 1080) { // Snacks 5:00 PM to 6:00 PM
+            return 'Snacks';
+        } else if (totalMinutes >= 1170 && totalMinutes < 1260) { // Dinner 7:30 PM to 9:00 PM
+            return 'Dinner';
+        } else {
+            return 'No Meal';
+        }
+    };
+
+    // Get Meal Status based on previous statuses and current meal
+    const getMealStatus = (record, mealType) => {
+        const currentMealType = getMealType(record.time);
+
+        // Check for previous meal statuses
+        let breakfastStatus = record.breakfastStatus || 'A'; // Default to A if not set
+        let lunchStatus = record.lunchStatus || 'A'; // Default to A if not set
+        let snacksStatus = record.snacksStatus || 'A'; // Default to A if not set
+        let dinnerStatus = record.dinnerStatus || 'A'; // Default to A if not set
+
+        switch (mealType) {
+            case 'Breakfast':
+                return currentMealType === 'Breakfast' ? 'P' : breakfastStatus; // 'P' if Breakfast, else keep previous status
+            case 'Lunch':
+                return currentMealType === 'Lunch' ? 'P' : lunchStatus;      // 'P' if Lunch, else keep previous status
+            case 'Snacks':
+                return currentMealType === 'Snacks' ? 'P' : snacksStatus;     // 'P' if Snacks, else keep previous status
+            case 'Dinner':
+                return currentMealType === 'Dinner' ? 'P' : dinnerStatus;     // 'P' if Dinner, else keep previous status
+            default:
+                return 'No Meal';
+        }
+    };
 
     const groupedRecords = groupByDate(attendanceRecords);
 
@@ -175,20 +191,26 @@ const formatDateTime = (dateString) => {
                                     <th>Roll No</th>
                                     <th>Time</th>
                                     <th>Meal</th>
-                                    <th>Status</th>
+                                    <th>Breakfast Status</th>
+                                    <th>Lunch Status</th>
+                                    <th>Snacks Status</th>
+                                    <th>Dinner Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-    {groupedRecords[date].map(record => (
-        <tr key={record._id}>
-            <td>{record.uniqueId}</td>
-            <td>{record.rollNo}</td>
-            <td>{formatDateTime(record.time)}</td> {/* Use formatDateTime */}
-            <td>{getMealType(record.time)}</td>
-            <td>{record.status}</td>
-        </tr>
-    ))}
-</tbody>
+                                {groupedRecords[date].map(record => (
+                                    <tr key={record._id}>
+                                        <td>{record.uniqueId}</td>
+                                        <td>{record.rollNo}</td>
+                                        <td>{record.time}</td>
+                                        <td>{getMealType(record.time)}</td>
+                                        <td>{getMealStatus(record, 'Breakfast')}</td>
+                                        <td>{getMealStatus(record, 'Lunch')}</td>
+                                        <td>{getMealStatus(record, 'Snacks')}</td>
+                                        <td>{getMealStatus(record, 'Dinner')}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
                         </table>
                     </div>
                 ))
