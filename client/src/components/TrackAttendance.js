@@ -124,12 +124,10 @@ const TrackAttendance = () => {
         }
     };
 
-    // Convert UTC time to IST
-    const convertUTCToIST = (utcTime) => {
-        const date = new Date(utcTime);
-        const istOffset = 5 * 60 + 30; // IST is UTC+5:30
-        const istTime = new Date(date.getTime() + istOffset * 60 * 1000);
-        return istTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const convertUTCToIST = (utcDate) => {
+         const date = new Date(utcDate);
+    // Get the IST time
+    return new Date(date.getTime() + (330 * 60 * 1000)).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     };
 
     const groupedRecords = groupByDate(attendanceRecords);
@@ -198,7 +196,7 @@ const TrackAttendance = () => {
                                     <tr key={record._id}>
                                         <td>{record.uniqueId}</td>
                                         <td>{record.rollNo}</td>
-                                        <td>{convertUTCToIST(record.time)}</td> {/* Convert UTC to IST */}
+                                       <td>{convertToIST(record.time)}</td>
                                         <td>{getMealType(record.time)}</td>
                                         <td>{getMealStatus(record, 'Breakfast')}</td>
                                         <td>{getMealStatus(record, 'Lunch')}</td>
