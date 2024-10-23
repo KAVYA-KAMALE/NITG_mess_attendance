@@ -83,22 +83,40 @@ const TrackAttendance = () => {
     };
 
     // Determine the meal based on the time
-    const getMealType = (time) => {
-        const [hours, minutes] = time.split(':').map(Number);
-        const totalMinutes = (hours % 12) * 60 + minutes;
+// Modify getMealType function to display time correctly based on the current timezone
+const getMealType = (time) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const totalMinutes = (hours % 12) * 60 + minutes;
 
-        if (totalMinutes >= 450 && totalMinutes < 570) { // Breakfast 7:30 AM to 9:30 AM
-            return 'Breakfast';
-        } else if (totalMinutes >= 720 && totalMinutes < 840) { // Lunch 12:00 PM to 2:00 PM
-            return 'Lunch';
-        } else if (totalMinutes >= 1020 && totalMinutes < 1080) { // Snacks 5:00 PM to 6:00 PM
-            return 'Snacks';
-        } else if (totalMinutes >= 1170 && totalMinutes < 1260) { // Dinner 7:30 PM to 9:00 PM
-            return 'Dinner';
-        } else {
-            return 'No Meal';
-        }
-    };
+    if (totalMinutes >= 450 && totalMinutes < 570) { // Breakfast 7:30 AM to 9:30 AM
+        return 'Breakfast';
+    } else if (totalMinutes >= 720 && totalMinutes < 840) { // Lunch 12:00 PM to 2:00 PM
+        return 'Lunch';
+    } else if (totalMinutes >= 1020 && totalMinutes < 1080) { // Snacks 5:00 PM to 6:00 PM
+        return 'Snacks';
+    } else if (totalMinutes >= 1170 && totalMinutes < 1260) { // Dinner 7:30 PM to 9:00 PM
+        return 'Dinner';
+    } else {
+        return 'No Meal';
+    }
+};
+
+// Function to properly format the date/time
+const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+
+    // Use Intl.DateTimeFormat to format the date/time to the local time zone
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    }).format(date);
+};
+
 
     const groupedRecords = groupByDate(attendanceRecords);
 
@@ -161,16 +179,16 @@ const TrackAttendance = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {groupedRecords[date].map(record => (
-                                    <tr key={record._id}>
-                                        <td>{record.uniqueId}</td>
-                                        <td>{record.rollNo}</td>
-                                        <td>{record.time}</td>
-                                        <td>{getMealType(record.time)}</td>
-                                        <td>{record.status}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
+    {groupedRecords[date].map(record => (
+        <tr key={record._id}>
+            <td>{record.uniqueId}</td>
+            <td>{record.rollNo}</td>
+            <td>{formatDateTime(record.time)}</td> {/* Use formatDateTime */}
+            <td>{getMealType(record.time)}</td>
+            <td>{record.status}</td>
+        </tr>
+    ))}
+</tbody>
                         </table>
                     </div>
                 ))
