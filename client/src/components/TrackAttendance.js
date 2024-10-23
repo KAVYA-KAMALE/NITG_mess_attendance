@@ -1,71 +1,186 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './TrackAttendance.css'; // Add CSS styling
 
 const TrackAttendance = () => {
-  const [attendanceData, setAttendanceData] = useState([]);
+    const [attendanceRecords, setAttendanceRecords] = useState([]);
+    const [error, setError] = useState('');
+    const [searchQuery, setSearchQuery] = useState(''); // State for search input
+    const [searchColumn, setSearchColumn] = useState('uniqueId'); // State for chosen column
+    const [selectedDate, setSelectedDate] = useState(''); // State for date selection
 
-  // Fetch attendance data (this will run once when the component mounts)
-  useEffect(() => {
-    fetchAttendanceRecords();
-  }, []);
+    // Fetch attendance records from the API using the environment variable for base URL
+    const fetchAttendanceRecords = async () => {
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_LINK}/api/attendance/track-attendance`);
+            setAttendanceRecords(response.data);
+        } catch (error) {
+            setError('Error fetching attendance records');
+        }
+    };
 
-  // Fetch attendance records from API
-  const fetchAttendanceRecords = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_LINK}/api/attendance/track-attendance`);
-      setAttendanceData(response.data);
-    } catch (error) {
-      console.error("Error fetching attendance records:", error);
-    }
-  };
+    // Use useEffect to fetch attendance records on component mount
+    useEffect(() => {
+        fetchAttendanceRecords();
+    }, []);
 
-  // Function to determine the current meal based on time
-  const determineMeal = (time) => {
-    const hours = new Date(time).getHours();
-    if (hours >= 7 && hours <= 9) return 'Breakfast';
-    else if (hours >= 12 && hours <= 14) return 'Lunch';
-    else if (hours >= 17 && hours <= 18) return 'Snacks';
-    else if (hours >= 19 && hours <= 21) return 'Dinner';
-    return '-';  // Default case
-  };
+    // Handle search functionality
+    const handleSearch = (e) => {
+        e.preventDefault();
+        let query = searchQuery;
 
-  // Render Table
-  return (
-    <div>
-      <h2>Track Attendance</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Unique ID</th>
-            <th>Roll No</th>
-            <th>Time</th>
-            <th>Meal</th>
-            <th>Breakfast Status</th>
-            <th>Lunch Status</th>
-            <th>Snacks Status</th>
-            <th>Dinner Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {attendanceData.map((record, index) => {
-            const meal = determineMeal(record.time);  // Determine meal based on time
-            return (
-              <tr key={index}>
-                <td>{record.uniqueId}</td>
-                <td>{record.rollNo}</td>
-                <td>{new Date(record.time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
-                <td>{meal}</td>
-                <td>{meal === 'Breakfast' ? 'P' : 'A'}</td>
-                <td>{meal === 'Lunch' ? 'P' : 'A'}</td>
-                <td>{meal === 'Snacks' ? 'P' : 'A'}</td>
-                <td>{meal === 'Dinner' ? 'P' : 'A'}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
+        // Use selectedDate for date search
+        if (searchColumn === 'date' && selectedDate) {
+            query = selectedDate;
+        }
+
+        if (query.trim()) {
+            const filteredRecords = attendanceRecords.filter(record => {
+                switch (searchColumn) {
+                    case 'uniqueId':
+                        return record.uniqueId && record.uniqueId.includes(query);
+                    case 'rollNo':
+                        return record.rollNo && record.rollNo.includes(query);
+                    case 'date':
+                        const inputDate = new Date(query).toLocaleDateString();  // Format as mm/dd/yyyy
+                        const recordDate = new Date(record.date).toLocaleDateString();  // Format as mm/dd/yyyy
+                        return recordDate === inputDate;
+                    case 'meal':
+                        const mealType = getMealType(record.time);
+                        return mealType && mealType.toLowerCase().includes(query.toLowerCase());
+                    default:
+                        return true;
+                }
+            });
+            setAttendanceRecords(filteredRecords);
+        } else {
+            fetchAttendanceRecords(); // Reset if search query is empty
+        }
+    };
+
+    // Handle clearing the search (back button functionality)
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        setSelectedDate(''); // Clear selected date
+        fetchAttendanceRecords(); // Refetch all records to reset the table
+    };
+
+    // Handle downloading the attendance records as an Excel file
+    const downloadExcel = () => {
+        window.open(`${process.env.REACT_APP_LINK}/api/attendance/export-attendance`);
+    };
+
+    // Group attendance records by date
+    const groupByDate = (records) => {
+        return records.reduce((groups, record) => {
+            const date = new Date(record.date).toLocaleDateString();
+            if (!groups[date]) {
+                groups[date] = [];
+            }
+            groups[date].push(record);
+            return groups;
+        }, {});
+    };
+
+    // Determine the meal based on the time
+    const getMealType = (time) => {
+        const [hours, minutes] = time.split(':').map(Number);
+        const totalMinutes = (hours % 12) * 60 + minutes;
+
+        if (totalMinutes >= 450 && totalMinutes < 570) { // Breakfast 7:30 AM to 9:30 AM
+            return 'Breakfast';
+        } else if (totalMinutes >= 720 && totalMinutes < 840) { // Lunch 12:00 PM to 2:00 PM
+            return 'Lunch';
+        } else if (totalMinutes >= 1020 && totalMinutes < 1080) { // Snacks 5:00 PM to 6:00 PM
+            return 'Snacks';
+        } else if (totalMinutes >= 1170 && totalMinutes < 1260) { // Dinner 7:30 PM to 9:00 PM
+            return 'Dinner';
+        } else {
+            return 'No Meal';
+        }
+    };
+
+    const groupedRecords = groupByDate(attendanceRecords);
+
+    return (
+        <div className="track-attendance-container">
+            <h2>Track Attendance</h2>
+            {error && <p>{error}</p>}
+
+            {/* Search Form */}
+            <form onSubmit={handleSearch}>
+                <div className="search-controls">
+                    <select
+                        value={searchColumn}
+                        onChange={(e) => setSearchColumn(e.target.value)}
+                        className="column-select"
+                    >
+                        <option value="uniqueId">Unique ID</option>
+                        <option value="rollNo">Roll No</option>
+                        <option value="meal">Meal</option>
+                        <option value="date">Date</option> {/* Include Date Option */}
+                    </select>
+
+                    {/* Conditionally render Date Picker or Text Input */}
+                    {searchColumn === 'date' ? (
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="search-input"
+                        />
+                    ) : (
+                        <input
+                            type="text"
+                            placeholder={`Search by ${searchColumn}`}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="search-input"
+                        />
+                    )}
+
+                    <button type="submit" className="search-button">Search</button>
+                    <button type="button" className="back-button" onClick={handleClearSearch}>
+                        Back
+                    </button>
+                </div>
+            </form>
+
+            {Object.keys(groupedRecords).length > 0 ? (
+                Object.keys(groupedRecords).map(date => (
+                    <div key={date} className="date-block">
+                        <h3>{date}</h3> {/* Display date as a header */}
+                        <table className="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>Unique ID</th>
+                                    <th>Roll No</th>
+                                    <th>Time</th>
+                                    <th>Meal</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {groupedRecords[date].map(record => (
+                                    <tr key={record._id}>
+                                        <td>{record.uniqueId}</td>
+                                        <td>{record.rollNo}</td>
+                                        <td>{record.time}</td>
+                                        <td>{getMealType(record.time)}</td>
+                                        <td>{record.status}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ))
+            ) : (
+                <p>No attendance records found</p>
+            )}
+
+            <button onClick={downloadExcel} className="download-button">Download as Excel</button>
+        </div>
+    );
 };
 
 export default TrackAttendance;
