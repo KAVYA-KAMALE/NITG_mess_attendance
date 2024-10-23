@@ -8,7 +8,6 @@ const StudentDetails = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false); // New loading state
     const inputRef = useRef(null);
-    const [isCardScan, setIsCardScan] = useState(false);
     const lastInputTime = useRef(Date.now());
 
     // Function to handle fetching student details
@@ -33,29 +32,11 @@ const StudentDetails = () => {
         setUniqueId(e.target.value);
 
         // If input is filled within 300ms (simulate card scan)
-        if (currentTime - lastInputTime.current < 300) {
-            setIsCardScan(true);
-        } else {
-            setIsCardScan(false);
+        if (currentTime - lastInputTime.current < 300 && e.target.value.length === 10) {
+            fetchStudentDetails(e.target.value); // Automatically fetch details on card scan
         }
 
         lastInputTime.current = currentTime;
-    };
-
-    // Auto-fetch details if a card is scanned
-    useEffect(() => {
-        if (uniqueId && isCardScan) {
-            fetchStudentDetails(uniqueId); // Auto-fetch when card is scanned
-        }
-    }, [uniqueId, isCardScan]);
-
-    // Handle manual Scan button click
-    const handleScan = () => {
-        if (uniqueId.trim()) {
-            fetchStudentDetails(uniqueId); // Manual fetch for entered ID
-        } else {
-            setError('Please enter a Unique ID.');
-        }
     };
 
     // Handle reset
@@ -63,7 +44,7 @@ const StudentDetails = () => {
         setUniqueId('');
         setStudent(null);
         setError('');
-        inputRef.current.focus(); // Refocus on the input field
+        inputRef.current.focus();
     };
 
     return (
@@ -78,9 +59,9 @@ const StudentDetails = () => {
                     value={uniqueId}
                     onChange={handleInputChange}
                     ref={inputRef}
+                    maxLength={10} // Limit input to 10 digits
                 />
                 <div className="button-group">
-                    <button onClick={handleScan} className="scan-button">Scan</button>
                     <button onClick={handleReset} className="reset-button">Reset</button>
                 </div>
             </div>
