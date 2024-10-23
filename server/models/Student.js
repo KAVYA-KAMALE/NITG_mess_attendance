@@ -7,9 +7,7 @@ const studentSchema = new mongoose.Schema({
     branch: { type: String, required: true },
     semester: { type: String, required: true },
     phoneNo: { type: String, required: true },
-    feePaid: { type: String, required: true },
-    photo: {type: String, required: true}
+    feePaid: { type: String, required: true }
 });
 
 module.exports = mongoose.model('Student', studentSchema);
-
