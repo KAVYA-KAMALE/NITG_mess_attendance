@@ -30,13 +30,23 @@ const StudentDetails = () => {
     const handleInputChange = (e) => {
         const currentTime = Date.now();
         setUniqueId(e.target.value);
-
-        // If input is filled within 300ms (simulate card scan)
+        
+        // Detect if the input is filled within 300ms (simulate card scan)
         if (currentTime - lastInputTime.current < 300 && e.target.value.length === 10) {
-            fetchStudentDetails(e.target.value); // Automatically fetch details on card scan
+            // Only fetch details if the ID is 10 digits
+            fetchStudentDetails(e.target.value);
         }
 
         lastInputTime.current = currentTime;
+    };
+
+    // Handle Scan button click (manual input)
+    const handleScan = () => {
+        if (uniqueId.trim()) {
+            fetchStudentDetails(uniqueId);
+        } else {
+            setError('Please enter a Unique ID.');
+        }
     };
 
     // Handle reset
@@ -59,9 +69,9 @@ const StudentDetails = () => {
                     value={uniqueId}
                     onChange={handleInputChange}
                     ref={inputRef}
-                    maxLength={10} // Limit input to 10 digits
                 />
                 <div className="button-group">
+                    <button onClick={handleScan} className="scan-button">Scan</button>
                     <button onClick={handleReset} className="reset-button">Reset</button>
                 </div>
             </div>
