@@ -4,6 +4,13 @@ const Student = require('../models/Student');
 const excel = require('exceljs'); // Add exceljs for Excel export
 const router = express.Router();
 
+// Function to convert UTC to IST
+const convertUTCtoIST = (date) => {
+  // Add 5 hours and 30 minutes to the UTC date
+  const istOffset = 5.5 * 60 * 60 * 1000; // Offset in milliseconds
+  return new Date(date.getTime() + istOffset);
+};
+
 // Route to mark attendance
 router.post('/mark-attendance', async (req, res) => {
   const { uniqueId, status } = req.body;
@@ -22,14 +29,9 @@ router.post('/mark-attendance', async (req, res) => {
       return res.status(404).send('Student not found');
     }
 
-    // Get the current time when marking attendance in IST
-    const currentTime = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Kolkata',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true
-    }).format(new Date());
+    // Get the current UTC time and convert it to IST
+    const currentTimeUTC = new Date();
+    const currentTimeIST = convertUTCtoIST(currentTimeUTC).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 
     // Create new attendance record with student details and time
     const attendance = new Attendance({
@@ -37,7 +39,7 @@ router.post('/mark-attendance', async (req, res) => {
       name: student.name,
       rollNo: student.rollNo,
       status,
-      time: currentTime // Save the time when attendance is marked
+      time: currentTimeIST // Save the time when attendance is marked
     });
 
     await attendance.save();
@@ -51,7 +53,12 @@ router.post('/mark-attendance', async (req, res) => {
 router.get('/track-attendance', async (req, res) => {
   try {
     const attendanceRecords = await Attendance.find();
-    res.status(200).json(attendanceRecords); // Return all attendance records, including time
+    // Convert all times to IST before sending the response
+    const convertedRecords = attendanceRecords.map(record => {
+      const timeInIST = convertUTCtoIST(new Date(record.time)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      return { ...record.toObject(), time: timeInIST }; // Replace original time with IST time
+    });
+    res.status(200).json(convertedRecords); // Return all attendance records with IST time
   } catch (error) {
     res.status(500).send('Error fetching attendance records: ' + error.message);
   }
@@ -104,11 +111,12 @@ router.get('/export-attendance', async (req, res) => {
       // Add rows to the worksheet from attendance records
       attendanceRecords.forEach(record => {
           const mealType = getMealType(record.time);
+          const timeInIST = convertUTCtoIST(new Date(record.time)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
           worksheet.addRow({
               uniqueId: record.uniqueId,
               rollNo: record.rollNo,
               date: new Date(record.date).toLocaleDateString(),
-              time: record.time,
+              time: timeInIST,
               mealType: mealType,
               breakfastStatus: record.breakfastStatus || 'A',
               lunchStatus: record.lunchStatus || 'A',
