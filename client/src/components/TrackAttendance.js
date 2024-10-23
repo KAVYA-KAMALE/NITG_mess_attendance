@@ -9,6 +9,7 @@ const TrackAttendance = () => {
     const [searchColumn, setSearchColumn] = useState('uniqueId');
     const [selectedDate, setSelectedDate] = useState('');
 
+    // Function to fetch attendance records
     const fetchAttendanceRecords = async () => {
         try {
             const trackAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/track-attendance`;
@@ -19,10 +20,12 @@ const TrackAttendance = () => {
         }
     };
 
+    // Fetch attendance records when the component is mounted
     useEffect(() => {
         fetchAttendanceRecords();
     }, []);
 
+    // Handle search queries based on selected column and query
     const handleSearch = (e) => {
         e.preventDefault();
         let query = searchQuery;
@@ -55,17 +58,20 @@ const TrackAttendance = () => {
         }
     };
 
+    // Clear search and reset records
     const handleClearSearch = () => {
         setSearchQuery('');
         setSelectedDate('');
         fetchAttendanceRecords();
     };
 
+    // Download attendance records
     const downloadExcel = () => {
         const exportAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/export-attendance`;
         window.open(exportAttendanceEndpoint);
-    };    
+    };
 
+    // Group attendance records by date
     const groupByDate = (records) => {
         return records.reduce((groups, record) => {
             const date = new Date(record.date).toLocaleDateString();
@@ -77,8 +83,8 @@ const TrackAttendance = () => {
         }, {});
     };
 
+    // Function to get meal type based on the time
     const getMealType = (time) => {
-        console.log("Meal Time: ", time); // Log the time
         const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
         if (!timeParts) return 'No Meal';
 
@@ -104,6 +110,7 @@ const TrackAttendance = () => {
         }
     };
 
+    // Function to determine the meal status based on the meal type
     const getMealStatus = (record, mealType) => {
         const currentMealType = getMealType(record.time);
         let breakfastStatus = record.breakfastStatus || 'A';
@@ -125,14 +132,14 @@ const TrackAttendance = () => {
         }
     };
 
+    // Convert UTC time to IST format
     const convertUTCToIST = (utcTime) => {
         const date = new Date(utcTime);
-        if (isNaN(date)) return 'Invalid Time'; // Handle invalid date
-        const istOffset = 5 * 60 + 30; // IST offset
-        const istTime = new Date(date.getTime() + istOffset * 60 * 1000);
-        return istTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        return date.toLocaleTimeString('en-GB', options); // IST time in 24-hour format
     };
 
+    // Group attendance records by date
     const groupedRecords = groupByDate(attendanceRecords);
 
     return (
@@ -186,7 +193,7 @@ const TrackAttendance = () => {
                                 <tr>
                                     <th>Unique ID</th>
                                     <th>Roll No</th>
-                                    <th>Time</th>
+                                    <th>Time (IST)</th>
                                     <th>Meal</th>
                                     <th>Breakfast Status</th>
                                     <th>Lunch Status</th>
@@ -199,9 +206,7 @@ const TrackAttendance = () => {
                                     <tr key={record._id}>
                                         <td>{record.uniqueId}</td>
                                         <td>{record.rollNo}</td>
-                                        <td>
-                                            {record.time ? convertUTCToIST(record.time) : 'Invalid Time'}
-                                        </td> {/* Convert UTC to IST */}
+                                        <td>{convertUTCToIST(record.time)}</td> {/* Convert UTC to IST */}
                                         <td>{getMealType(record.time)}</td>
                                         <td>{getMealStatus(record, 'Breakfast')}</td>
                                         <td>{getMealStatus(record, 'Lunch')}</td>
