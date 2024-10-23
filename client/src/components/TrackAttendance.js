@@ -124,9 +124,10 @@ const TrackAttendance = () => {
         }
     };
 
+    // Convert UTC time to IST
     const convertUTCToIST = (utcTime) => {
         const date = new Date(utcTime);
-        const istOffset = 5 * 60 + 30;
+        const istOffset = 5 * 60 + 30; // IST is UTC+5:30
         const istTime = new Date(date.getTime() + istOffset * 60 * 1000);
         return istTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     };
