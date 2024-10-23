@@ -45,14 +45,14 @@ const StudentDetails = () => {
     // Auto-fetch details if a card is scanned
     useEffect(() => {
         if (uniqueId && isCardScan) {
-            fetchStudentDetails(uniqueId);
+            fetchStudentDetails(uniqueId); // Auto-fetch when card is scanned
         }
     }, [uniqueId, isCardScan]);
 
-    // Handle Scan button click (manual input)
+    // Handle manual Scan button click
     const handleScan = () => {
         if (uniqueId.trim()) {
-            fetchStudentDetails(uniqueId);
+            fetchStudentDetails(uniqueId); // Manual fetch for entered ID
         } else {
             setError('Please enter a Unique ID.');
         }
@@ -63,7 +63,7 @@ const StudentDetails = () => {
         setUniqueId('');
         setStudent(null);
         setError('');
-        inputRef.current.focus();
+        inputRef.current.focus(); // Refocus on the input field
     };
 
     return (
