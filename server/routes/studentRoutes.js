@@ -1,37 +1,12 @@
 const express = require('express');
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
 const router = express.Router();
 const Student = require('../models/Student');
 
-// Create 'uploads' directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
-}
-
-// Configure multer to store uploaded files in the 'uploads' directory
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadsDir); // Use the created uploads directory
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname); // Unique filename
-    }
-});
-
-// Initialize multer with the storage configuration
-const upload = multer({ storage: storage });
-
-// Register a new student (with photo upload)
-router.post('/register', upload.single('photo'), async (req, res) => {
+// Register a new student (without photo upload)
+router.post('/register', async (req, res) => {
     const { uniqueId, name, rollNo, branch, semester, phoneNo, feePaid } = req.body;
 
     console.log('Received data:', req.body);
-
-    // Get the file path of the uploaded photo
-    const photoPath = req.file ? req.file.path.replace(/\\/g, '/') : null; // Use forward slashes
 
     try {
         const newStudent = new Student({
@@ -41,8 +16,7 @@ router.post('/register', upload.single('photo'), async (req, res) => {
             branch,
             semester,
             phoneNo,
-            feePaid, 
-            photo: photoPath // Store the relative path in the database
+            feePaid
         });
 
         await newStudent.save();
@@ -53,7 +27,7 @@ router.post('/register', upload.single('photo'), async (req, res) => {
     }
 });
 
-// Unregister a student (no photo needed)
+// Unregister a student
 router.post('/unregister', async (req, res) => {
     const { uniqueId } = req.body;
 
@@ -65,7 +39,7 @@ router.post('/unregister', async (req, res) => {
     }
 });
 
-// Update student details (no photo needed)
+// Update student details
 router.put('/update', async (req, res) => {
     const { uniqueId, name, rollNo, branch, semester, phoneNo, feePaid } = req.body;
 
