@@ -78,6 +78,7 @@ const TrackAttendance = () => {
     };
 
     const getMealType = (time) => {
+        console.log("Meal Time: ", time); // Log the time
         const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
         if (!timeParts) return 'No Meal';
 
@@ -126,7 +127,8 @@ const TrackAttendance = () => {
 
     const convertUTCToIST = (utcTime) => {
         const date = new Date(utcTime);
-        const istOffset = 5 * 60 + 30;
+        if (isNaN(date)) return 'Invalid Time'; // Handle invalid date
+        const istOffset = 5 * 60 + 30; // IST offset
         const istTime = new Date(date.getTime() + istOffset * 60 * 1000);
         return istTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     };
@@ -197,7 +199,9 @@ const TrackAttendance = () => {
                                     <tr key={record._id}>
                                         <td>{record.uniqueId}</td>
                                         <td>{record.rollNo}</td>
-                                        <td>{convertUTCToIST(record.time)}</td> {/* Convert UTC to IST */}
+                                        <td>
+                                            {record.time ? convertUTCToIST(record.time) : 'Invalid Time'}
+                                        </td> {/* Convert UTC to IST */}
                                         <td>{getMealType(record.time)}</td>
                                         <td>{getMealStatus(record, 'Breakfast')}</td>
                                         <td>{getMealStatus(record, 'Lunch')}</td>
