@@ -11,7 +11,6 @@ const RegisterStudent = () => {
     const [semester, setSemester] = useState('');
     const [phoneNo, setPhoneNo] = useState('');
     const [feePaid, setFeePaid] = useState(''); // Default to empty string
-    const [photo, setPhoto] = useState(null); // State for the uploaded photo
 
     // State for unregistration
     const [unregisterId, setUnregisterId] = useState('');
@@ -34,23 +33,15 @@ const RegisterStudent = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        const formData = new FormData(); // Create a FormData object
-        formData.append('uniqueId', uniqueId);
-        formData.append('name', name);
-        formData.append('rollNo', rollNo);
-        formData.append('branch', branch);
-        formData.append('semester', semester);
-        formData.append('phoneNo', phoneNo);
-        formData.append('feePaid', feePaid);
-        if (photo) {
-            formData.append('photo', photo); // Append the photo file
-        }
-
         try {
-            await axios.post(studentRegisterEndpoint, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data' // Set the content type
-                }
+            await axios.post(studentRegisterEndpoint, {
+                uniqueId,
+                name,
+                rollNo,
+                branch,
+                semester,
+                phoneNo,
+                feePaid
             });
             setMessage('Student registered successfully!');
             setError('');
@@ -60,10 +51,6 @@ const RegisterStudent = () => {
             setError('Error registering student');
             setMessage('');
         }
-    };
-
-    const handlePhotoChange = (e) => {
-        setPhoto(e.target.files[0]); // Set the selected file
     };
 
     const handleUnregister = async (e) => {
@@ -130,7 +117,6 @@ const RegisterStudent = () => {
         setSemester('');
         setPhoneNo('');
         setFeePaid('');
-        setPhoto(null); // Reset the photo
         setMessage('');
         setError('');
     };
@@ -241,16 +227,6 @@ const RegisterStudent = () => {
                             <option value="No">No</option>
                         </select>
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="photo">Upload Photo</label>
-                        <input
-                            type="file"
-                            id="photo"
-                            accept="image/*"
-                            onChange={handlePhotoChange} // Handle photo change
-                            required
-                        />
-                    </div>
                     <button type="submit" className="register-button">
                         Register
                     </button>
@@ -310,7 +286,6 @@ const RegisterStudent = () => {
                             placeholder="Enter Name"
                             value={updateName}
                             onChange={(e) => setUpdateName(e.target.value)}
-                            required
                         />
                     </div>
                     <div className="form-group">
@@ -321,7 +296,6 @@ const RegisterStudent = () => {
                             placeholder="Enter Roll No"
                             value={updateRollNo}
                             onChange={(e) => setUpdateRollNo(e.target.value)}
-                            required
                         />
                     </div>
                     <div className="form-group">
@@ -332,7 +306,6 @@ const RegisterStudent = () => {
                             placeholder="Enter Branch"
                             value={updateBranch}
                             onChange={(e) => setUpdateBranch(e.target.value)}
-                            required
                         />
                     </div>
                     <div className="form-group">
@@ -343,7 +316,6 @@ const RegisterStudent = () => {
                             placeholder="Enter Semester"
                             value={updateSemester}
                             onChange={(e) => setUpdateSemester(e.target.value)}
-                            required
                         />
                     </div>
                     <div className="form-group">
@@ -354,7 +326,6 @@ const RegisterStudent = () => {
                             placeholder="Enter Phone No"
                             value={updatePhoneNo}
                             onChange={(e) => setUpdatePhoneNo(e.target.value)}
-                            required
                         />
                     </div>
                     <div className="form-group">
@@ -363,7 +334,6 @@ const RegisterStudent = () => {
                             id="updateFeePaid"
                             value={updateFeePaid}
                             onChange={(e) => setUpdateFeePaid(e.target.value)}
-                            required
                         >
                             <option value="">Select Fee Status</option>
                             <option value="Yes">Yes</option>
@@ -379,8 +349,8 @@ const RegisterStudent = () => {
                 </form>
             </div>
 
-            {message && <p className="success-message">{message}</p>}
-            {error && <p className="error-message">{error}</p>}
+            {message && <div className="success-message">{message}</div>}
+            {error && <div className="error-message">{error}</div>}
         </div>
     );
 };
