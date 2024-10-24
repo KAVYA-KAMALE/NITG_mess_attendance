@@ -31,8 +31,6 @@ router.post('/mark-attendance', async (req, res) => {
       uniqueId: student.uniqueId,
       name: student.name,
       rollNo: student.rollNo,
-      semester: student.semester, // Add semester
-      feePaid: student.feePaid, // Add fee paid status
       status,
       time: currentTime // Save the time when attendance is marked
     });
@@ -47,7 +45,7 @@ router.post('/mark-attendance', async (req, res) => {
 // Route to get all attendance records
 router.get('/track-attendance', async (req, res) => {
   try {
-    const attendanceRecords = await Attendance.find().populate('uniqueId'); // Populate student details if needed
+    const attendanceRecords = await Attendance.find();
     res.status(200).json(attendanceRecords); // Return all attendance records, including time
   } catch (error) {
     res.status(500).send('Error fetching attendance records: ' + error.message);
@@ -61,16 +59,13 @@ router.get('/export-attendance', async (req, res) => {
       const attendanceRecords = await Attendance.find();
 
       // Create a new Excel workbook and worksheet
-      const workbook = new excel.Workbook();
+      const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Attendance Records');
 
       // Define columns in the worksheet
       worksheet.columns = [
           { header: 'Unique ID', key: 'uniqueId', width: 15 },
           { header: 'Roll No', key: 'rollNo', width: 15 },
-          { header: 'Name', key: 'name', width: 20 }, // Added Name column
-          { header: 'Semester', key: 'semester', width: 15 }, // Added Semester column
-          { header: 'Fee Paid', key: 'feePaid', width: 15 }, // Added Fee Paid column
           { header: 'Date', key: 'date', width: 15 },
           { header: 'Time', key: 'time', width: 15 },
           { header: 'Meal Type', key: 'mealType', width: 15 },
@@ -81,6 +76,7 @@ router.get('/export-attendance', async (req, res) => {
       ];
 
       // Helper function to determine meal type from time
+
      const getMealType = (time) => {
           const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
           if (!timeParts) return 'No Meal';
@@ -107,9 +103,6 @@ router.get('/export-attendance', async (req, res) => {
           worksheet.addRow({
               uniqueId: record.uniqueId,
               rollNo: record.rollNo,
-              name: record.name, // Added Name to the row
-              semester: record.semester, // Added Semester to the row
-              feePaid: record.feePaid, // Added Fee Paid to the row
               date: new Date(record.date).toLocaleDateString(),
               time: record.time,
               mealType: mealType,
