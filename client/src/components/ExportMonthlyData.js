@@ -1,107 +1,103 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './ExportMonthlyData.css'; // Ensure proper CSS for styling
+import './ExportMonthlyData.css'; // Create appropriate CSS file for styling
 
 const ExportMonthlyData = () => {
-    const [students, setStudents] = useState([]);
-    const [attendance, setAttendance] = useState([]);
+    const [students, setStudents] = useState([]); // Hold student details
+    const [attendanceRecords, setAttendanceRecords] = useState([]); // Hold attendance data
     const [error, setError] = useState('');
-
-    // Fetch Student Details from API
+    
+    // Fetch student details from StudentDetails component
     const fetchStudentDetails = async () => {
         try {
             const studentDetailsEndpoint = `${process.env.REACT_APP_LINK}/api/students/details`;
             const response = await axios.get(studentDetailsEndpoint);
-            setStudents(response.data);
+            setStudents(response.data); // Assuming API returns an array of student details
         } catch (err) {
             setError('Error fetching student details');
         }
     };
 
-    // Fetch Attendance Records from API
+    // Fetch attendance records from TrackAttendance component
     const fetchAttendanceRecords = async () => {
         try {
             const attendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/track-attendance`;
             const response = await axios.get(attendanceEndpoint);
-            setAttendance(response.data);
+            setAttendanceRecords(response.data); // Assuming API returns attendance data
         } catch (err) {
             setError('Error fetching attendance records');
         }
     };
 
-    // Fetch data on component mount
+    // Use useEffect to fetch data on component mount
     useEffect(() => {
         fetchStudentDetails();
         fetchAttendanceRecords();
     }, []);
 
-    // Helper function to map meal statuses based on dates
-    const getMealStatus = (record, mealType) => {
-        switch (mealType) {
-            case 'Breakfast':
-                return record.breakfastStatus || 'A';
-            case 'Lunch':
-                return record.lunchStatus || 'A';
-            case 'Snacks':
-                return record.snacksStatus || 'A';
-            case 'Dinner':
-                return record.dinnerStatus || 'A';
-            default:
-                return 'A'; // Default to absent
-        }
+    // Helper to group attendance records by date and track meals
+    const groupByDate = (records) => {
+        return records.reduce((groups, record) => {
+            const date = new Date(record.date).toLocaleDateString();
+            if (!groups[date]) {
+                groups[date] = [];
+            }
+            groups[date].push(record);
+            return groups;
+        }, {});
     };
 
-    // Filter attendance records for each student by their Unique ID
-    const getAttendanceForStudent = (studentId) => {
-        return attendance.filter(record => record.uniqueId === studentId);
-    };
+    const groupedAttendance = groupByDate(attendanceRecords);
 
     return (
         <div className="export-monthly-data-container">
             <h2>Export Monthly Data</h2>
-            {error && <p className="error-message">{error}</p>}
-            
-            <table className="export-table">
+            {error && <p className="error">{error}</p>}
+            <table className="monthly-data-table">
                 <thead>
                     <tr>
                         <th>Roll No</th>
                         <th>Name</th>
                         <th>Semester</th>
                         <th>Fee Paid</th>
-                        <th>Dates</th>
+                        {/* Dynamically add date columns with sub-columns for meals */}
+                        {Object.keys(groupedAttendance).map(date => (
+                            <th key={date}>
+                                {date}
+                                <div className="meal-subcols">
+                                    <span>Breakfast</span>
+                                    <span>Lunch</span>
+                                    <span>Snacks</span>
+                                    <span>Dinner</span>
+                                </div>
+                            </th>
+                        ))}
                     </tr>
                 </thead>
                 <tbody>
+                    {/* Render each student's details */}
                     {students.map(student => (
                         <tr key={student.uniqueId}>
                             <td>{student.rollNo}</td>
                             <td>{student.name}</td>
                             <td>{student.semester}</td>
                             <td>{student.feePaid ? 'Yes' : 'No'}</td>
-                            <td>
-                                <table className="meal-status-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Breakfast</th>
-                                            <th>Lunch</th>
-                                            <th>Snacks</th>
-                                            <th>Dinner</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {getAttendanceForStudent(student.uniqueId).map(record => (
-                                            <tr key={record.date}>
-                                                <td>{new Date(record.date).toLocaleDateString()}</td>
-                                                <td>{getMealStatus(record, 'Breakfast')}</td>
-                                                <td>{getMealStatus(record, 'Lunch')}</td>
-                                                <td>{getMealStatus(record, 'Snacks')}</td>
-                                                <td>{getMealStatus(record, 'Dinner')}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </td>
+                            {/* For each student, render attendance status for each date */}
+                            {Object.keys(groupedAttendance).map(date => {
+                                const attendanceForDate = groupedAttendance[date].find(
+                                    record => record.uniqueId === student.uniqueId
+                                );
+                                return (
+                                    <td key={date}>
+                                        <div className="meal-status">
+                                            <span>{attendanceForDate?.breakfastStatus || 'A'}</span>
+                                            <span>{attendanceForDate?.lunchStatus || 'A'}</span>
+                                            <span>{attendanceForDate?.snacksStatus || 'A'}</span>
+                                            <span>{attendanceForDate?.dinnerStatus || 'A'}</span>
+                                        </div>
+                                    </td>
+                                );
+                            })}
                         </tr>
                     ))}
                 </tbody>
