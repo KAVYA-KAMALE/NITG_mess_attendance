@@ -13,24 +13,10 @@ const TrackAttendance = () => {
     const fetchAttendanceRecords = async () => {
         try {
             const response = await axios.get(`${process.env.REACT_APP_LINK}/api/attendance/track-attendance`);
-            // Convert time to IST for each record
-            const recordsWithISTTime = response.data.map(record => ({
-                ...record,
-                time: convertToIST(record.time)
-            }));
-            setAttendanceRecords(recordsWithISTTime);
+            setAttendanceRecords(response.data);
         } catch (error) {
             setError('Error fetching attendance records');
         }
-    };
-
-    // Function to convert time to IST
-    const convertToIST = (utcTime) => {
-        const date = new Date(utcTime);
-        // Convert to IST (UTC+5:30)
-        const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours and 30 minutes in milliseconds
-        const istDate = new Date(date.getTime() + istOffset);
-        return istDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
     };
 
     // Use useEffect to fetch attendance records on component mount
@@ -216,7 +202,7 @@ const TrackAttendance = () => {
                                     <tr key={record._id}>
                                         <td>{record.uniqueId}</td>
                                         <td>{record.rollNo}</td>
-                                        <td>{record.time}</td> {/* This will now display IST */}
+                                        <td>{record.time}</td>
                                         <td>{getMealType(record.time)}</td>
                                         <td>{getMealStatus(record, 'Breakfast')}</td>
                                         <td>{getMealStatus(record, 'Lunch')}</td>
@@ -229,12 +215,10 @@ const TrackAttendance = () => {
                     </div>
                 ))
             ) : (
-                <p>No attendance records found.</p>
+                <p>No attendance records found</p>
             )}
 
-            <button className="download-button" onClick={downloadExcel}>
-                Download Attendance Records
-            </button>
+            <button onClick={downloadExcel} className="download-button">Download as Excel</button>
         </div>
     );
 };
