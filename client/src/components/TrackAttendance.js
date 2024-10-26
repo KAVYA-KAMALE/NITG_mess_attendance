@@ -10,7 +10,7 @@ const TrackAttendance = () => {
     const [selectedDate, setSelectedDate] = useState(''); // State for date selection
 
     // Fetch attendance records from the API
-    const fetchAttendanceRecords = async () => {
+    const fetchAttendanceRecords = async () => { 
         try {
             const trackAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/track-attendance`;
             const response = await axios.get(trackAttendanceEndpoint);
