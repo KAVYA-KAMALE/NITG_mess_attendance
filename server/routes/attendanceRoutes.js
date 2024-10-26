@@ -49,34 +49,17 @@ router.post('/mark-attendance', async (req, res) => {
 });
 
 
-// Route to get all attendance records with IST time
+// Route to get all attendance records
 router.get('/track-attendance', async (req, res) => {
   try {
     const attendanceRecords = await Attendance.find();
-
-    // Convert each record's time to IST
-    const recordsWithIST = attendanceRecords.map(record => {
-      const istTime = new Intl.DateTimeFormat('en-GB', {
-        timeZone: 'Asia/Kolkata',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-      }).format(new Date(record.time));
-      
-      return {
-        ...record.toObject(),
-        time: istTime
-      };
-    });
-
-    res.status(200).json(recordsWithIST); // Return all attendance records with IST time
+    res.status(200).json(attendanceRecords); // Return all attendance records, including time
   } catch (error) {
     res.status(500).send('Error fetching attendance records: ' + error.message);
   }
 });
 
-// Route to export attendance data as an Excel file with IST time
+// Route to export attendance data as an Excel file
 router.get('/export-attendance', async (req, res) => {
   try {
       // Fetch attendance data from the database
@@ -100,7 +83,8 @@ router.get('/export-attendance', async (req, res) => {
       ];
 
       // Helper function to determine meal type from time
-      const getMealType = (time) => {
+
+     const getMealType = (time) => {
           const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
           if (!timeParts) return 'No Meal';
 
@@ -120,22 +104,14 @@ router.get('/export-attendance', async (req, res) => {
           return 'No Meal';
       };
 
-      // Add rows to the worksheet from attendance records, converting times to IST
+      // Add rows to the worksheet from attendance records
       attendanceRecords.forEach(record => {
-          const istTime = new Intl.DateTimeFormat('en-GB', {
-            timeZone: 'Asia/Kolkata',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-          }).format(new Date(record.time));
-
-          const mealType = getMealType(istTime);
+          const mealType = getMealType(record.time);
           worksheet.addRow({
               uniqueId: record.uniqueId,
               rollNo: record.rollNo,
-              date: new Date(record.date).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' }),
-              time: istTime,
+              date: new Date(record.date).toLocaleDateString(),
+              time: record.time,
               mealType: mealType,
               breakfastStatus: record.breakfastStatus || 'A',
               lunchStatus: record.lunchStatus || 'A',
@@ -162,6 +138,7 @@ router.get('/export-attendance', async (req, res) => {
       res.status(500).json({ error: 'Failed to export attendance data' });
   }
 });
+
 
 
 
