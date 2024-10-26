@@ -86,8 +86,7 @@ const TrackAttendance = () => {
     };
 
     // Determine the meal based on the time
-// Determine the meal based on the time
-const getMealType = (time) => {
+    const getMealType = (time) => {
     // Update the regex to make seconds optional
     const timeParts = time.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)/i);
     if (!timeParts) {
