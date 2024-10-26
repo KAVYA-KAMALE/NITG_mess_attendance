@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react'; 
 import axios from 'axios';
 import './TrackAttendance.css'; // Add CSS styling
 
@@ -85,7 +86,8 @@ const TrackAttendance = () => {
     };
 
     // Determine the meal based on the time
-    const getMealType = (time) => {
+// Determine the meal based on the time
+const getMealType = (time) => {
     // Update the regex to make seconds optional
     const timeParts = time.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)/i);
     if (!timeParts) {
