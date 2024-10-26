@@ -23,8 +23,14 @@ router.post('/mark-attendance', async (req, res) => {
       return res.status(404).send('Student not found');
     }
 
-    // Get the current time when marking attendance
-    const currentTime = new Date().toLocaleTimeString(); // Format: "HH:MM:SS AM/PM"
+    // Get the current time in IST (Indian Standard Time)
+    const currentTime = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    }).format(new Date());
 
     // Create new attendance record with student details and time
     const attendance = new Attendance({
@@ -32,7 +38,7 @@ router.post('/mark-attendance', async (req, res) => {
       name: student.name,
       rollNo: student.rollNo,
       status,
-      time: currentTime // Save the time when attendance is marked
+      time: currentTime // Save the time in IST format
     });
 
     await attendance.save();
@@ -41,6 +47,7 @@ router.post('/mark-attendance', async (req, res) => {
     res.status(500).send('Error marking attendance: ' + error.message);
   }
 });
+
 
 // Route to get all attendance records
 router.get('/track-attendance', async (req, res) => {
