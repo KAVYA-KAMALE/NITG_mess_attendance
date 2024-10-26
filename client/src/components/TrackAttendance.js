@@ -120,47 +120,28 @@ const TrackAttendance = () => {
 
 
     // Get Meal Status based on previous statuses and current meal
- const getMealStatus = (record, mealType, recordsForDate) => {
-    const previousMeals = recordsForDate.filter(r => r.uniqueId === record.uniqueId);
+    const getMealStatus = (record, mealType) => {
+        const currentMealType = getMealType(record.time);
 
-    // Initialize statuses to 'A' and set to 'P' if any prior record shows 'P'
-    let breakfastStatus = 'A';
-    let lunchStatus = 'A';
-    let snacksStatus = 'A';
-    let dinnerStatus = 'A';
+        // Check for previous meal statuses
+        let breakfastStatus = record.breakfastStatus || 'A'; // Default to A if not set
+        let lunchStatus = record.lunchStatus || 'A'; // Default to A if not set
+        let snacksStatus = record.snacksStatus || 'A'; // Default to A if not set
+        let dinnerStatus = record.dinnerStatus || 'A'; // Default to A if not set
 
-    // Loop through each previous meal record to update statuses
-    previousMeals.forEach(prevRecord => {
-        const currentMealType = getMealType(prevRecord.time);
-        if (currentMealType === 'Breakfast' && prevRecord.breakfastStatus === 'P') {
-            breakfastStatus = 'P';
+        switch (mealType) {
+            case 'Breakfast':
+                return currentMealType === 'Breakfast' ? 'P' : breakfastStatus; // 'P' if Breakfast, else keep previous status
+            case 'Lunch':
+                return currentMealType === 'Lunch' ? 'P' : lunchStatus;      // 'P' if Lunch, else keep previous status
+            case 'Snacks':
+                return currentMealType === 'Snacks' ? 'P' : snacksStatus;     // 'P' if Snacks, else keep previous status
+            case 'Dinner':
+                return currentMealType === 'Dinner' ? 'P' : dinnerStatus;     // 'P' if Dinner, else keep previous status
+            default:
+                return 'No Meal';
         }
-        if (currentMealType === 'Lunch' && prevRecord.lunchStatus === 'P') {
-            lunchStatus = 'P';
-        }
-        if (currentMealType === 'Snacks' && prevRecord.snacksStatus === 'P') {
-            snacksStatus = 'P';
-        }
-        if (currentMealType === 'Dinner' && prevRecord.dinnerStatus === 'P') {
-            dinnerStatus = 'P';
-        }
-    });
-
-    // Return the appropriate status based on the current meal type
-    switch (mealType) {
-        case 'Breakfast':
-            return breakfastStatus;
-        case 'Lunch':
-            return lunchStatus;
-        case 'Snacks':
-            return snacksStatus;
-        case 'Dinner':
-            return dinnerStatus;
-        default:
-            return 'No Meal';
-    }
-};
-
+    };
 
     const groupedRecords = groupByDate(attendanceRecords);
 
@@ -226,20 +207,19 @@ const TrackAttendance = () => {
                                 </tr>
                             </thead>
                             <tbody>
-    {groupedRecords[date].map(record => (
-        <tr key={record._id}>
-            <td>{record.uniqueId}</td>
-            <td>{record.rollNo}</td>
-            <td>{record.time}</td>
-            <td>{getMealType(record.time)}</td>
-            <td>{getMealStatus(record, 'Breakfast', groupedRecords[date])}</td>
-            <td>{getMealStatus(record, 'Lunch', groupedRecords[date])}</td>
-            <td>{getMealStatus(record, 'Snacks', groupedRecords[date])}</td>
-            <td>{getMealStatus(record, 'Dinner', groupedRecords[date])}</td>
-        </tr>
-    ))}
-</tbody>
-
+                                {groupedRecords[date].map(record => (
+                                    <tr key={record._id}>
+                                        <td>{record.uniqueId}</td>
+                                        <td>{record.rollNo}</td>
+                                        <td>{record.time}</td>
+                                        <td>{getMealType(record.time)}</td>
+                                        <td>{getMealStatus(record, 'Breakfast')}</td>
+                                        <td>{getMealStatus(record, 'Lunch')}</td>
+                                        <td>{getMealStatus(record, 'Snacks')}</td>
+                                        <td>{getMealStatus(record, 'Dinner')}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
                         </table>
                     </div>
                 ))
