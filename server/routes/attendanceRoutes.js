@@ -104,20 +104,40 @@ router.get('/export-attendance', async (req, res) => {
       };
 
       // Add rows to the worksheet from attendance records
-      attendanceRecords.forEach(record => {
-          const mealType = getMealType(record.time);
-          worksheet.addRow({
-              uniqueId: record.uniqueId,
-              rollNo: record.rollNo,
-              date: new Date(record.date).toLocaleDateString(),
-              time: record.time,
-              mealType: mealType,
-              breakfastStatus: record.breakfastStatus || 'A',
-              lunchStatus: record.lunchStatus || 'A',
-              snacksStatus: record.snacksStatus || 'A',
-              dinnerStatus: record.dinnerStatus || 'A',
-          });
-      });
+    // Add rows to the worksheet from attendance records
+attendanceRecords.forEach(record => {
+    const mealType = getMealType(record.time);
+    
+    // Initialize statuses to 'A' (Absent)
+    let breakfastStatus = 'A';
+    let lunchStatus = 'A';
+    let snacksStatus = 'A';
+    let dinnerStatus = 'A';
+    
+    // Update the status based on the meal type
+    if (mealType === 'Breakfast') {
+        breakfastStatus = 'P'; // Present
+    } else if (mealType === 'Lunch') {
+        lunchStatus = 'P'; // Present
+    } else if (mealType === 'Snacks') {
+        snacksStatus = 'P'; // Present
+    } else if (mealType === 'Dinner') {
+        dinnerStatus = 'P'; // Present
+    }
+
+    worksheet.addRow({
+        uniqueId: record.uniqueId,
+        rollNo: record.rollNo,
+        date: new Date(record.date).toLocaleDateString(),
+        time: record.time,
+        mealType: mealType,
+        breakfastStatus: breakfastStatus,
+        lunchStatus: lunchStatus,
+        snacksStatus: snacksStatus,
+        dinnerStatus: dinnerStatus,
+    });
+});
+
 
       // Set the response headers to force a download
       res.setHeader(
