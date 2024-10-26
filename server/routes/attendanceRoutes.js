@@ -82,17 +82,14 @@ router.get('/export-attendance', async (req, res) => {
       ];
 
       // Helper function to determine meal type from time
-      const getMealType = (time) => {
-          // Updated regex to make seconds optional and case-insensitive for AM/PM
-          const timeParts = time.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)/i);
-          if (!timeParts) {
-              console.log(`Unexpected time format: ${time}`);
-              return 'No Meal'; // Log and return default meal type
-          }
+
+     const getMealType = (time) => {
+          const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
+          if (!timeParts) return 'No Meal';
 
           let hours = parseInt(timeParts[1]);
           const minutes = parseInt(timeParts[2]);
-          const period = timeParts[4].toUpperCase(); // Ensure AM/PM is uppercase
+          const period = timeParts[3]; // AM or PM
 
           if (period === 'PM' && hours < 12) hours += 12;
           if (period === 'AM' && hours === 12) hours = 0;
