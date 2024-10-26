@@ -48,14 +48,6 @@ router.post('/mark-attendance', async (req, res) => {
   }
 });
 
-
-// Function to convert UTC to IST
-const convertToIST = (date) => {
-    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-    const istDate = new Date(date.getTime() + istOffset);
-    return istDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-};
-
 // Route to get all attendance records
 router.get('/track-attendance', async (req, res) => {
   try {
