@@ -104,40 +104,43 @@ router.get('/export-attendance', async (req, res) => {
       };
 
       // Add rows to the worksheet from attendance records
-   // Add rows to the worksheet from attendance records
-attendanceRecords.forEach(record => {
-    const mealType = getMealType(record.time);
-    
-    // Initialize all meal statuses to 'A'
-    let breakfastStatus = 'A';
-    let lunchStatus = 'A';
-    let snacksStatus = 'A';
-    let dinnerStatus = 'A';
+    // Helper function to determine meal type from time
 
-    // Set the appropriate status based on the mealType
-    if (mealType === 'Breakfast') {
-        breakfastStatus = 'P'; // Mark present for breakfast
-    } else if (mealType === 'Lunch') {
-        lunchStatus = 'P'; // Mark present for lunch
-    } else if (mealType === 'Snacks') {
-        snacksStatus = 'P'; // Mark present for snacks
-    } else if (mealType === 'Dinner') {
-        dinnerStatus = 'P'; // Mark present for dinner
-    }
+     const getMealType = (time) => {
+          const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
+          if (!timeParts) return 'No Meal';
 
-    worksheet.addRow({
-        uniqueId: record.uniqueId,
-        rollNo: record.rollNo,
-        date: new Date(record.date).toLocaleDateString(),
-        time: record.time,
-        mealType: mealType,
-        breakfastStatus: breakfastStatus,
-        lunchStatus: lunchStatus,
-        snacksStatus: snacksStatus,
-        dinnerStatus: dinnerStatus,
-    });
-});
+          let hours = parseInt(timeParts[1]);
+          const minutes = parseInt(timeParts[2]);
+          const period = timeParts[3]; // AM or PM
 
+          if (period === 'PM' && hours < 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+
+          const totalMinutes = (hours * 60) + minutes;
+
+          if (totalMinutes >= 450 && totalMinutes < 570) return 'Breakfast'; // 7:30 AM to 9:30 AM
+          if (totalMinutes >= 720 && totalMinutes < 840) return 'Lunch';     // 12:00 PM to 2:00 PM
+          if (totalMinutes >= 1020 && totalMinutes < 1080) return 'Snacks';  // 5:00 PM to 6:00 PM
+          if (totalMinutes >= 1170 && totalMinutes < 1260) return 'Dinner';  // 7:30 PM to 9:00 PM
+          return 'No Meal';
+      };
+
+      // Add rows to the worksheet from attendance records
+      attendanceRecords.forEach(record => {
+          const mealType = getMealType(record.time);
+          worksheet.addRow({
+              uniqueId: record.uniqueId,
+              rollNo: record.rollNo,
+              date: new Date(record.date).toLocaleDateString(),
+              time: record.time,
+              mealType: mealType,
+              breakfastStatus: record.breakfastStatus || 'A',
+              lunchStatus: record.lunchStatus || 'A',
+              snacksStatus: record.snacksStatus || 'A',
+              dinnerStatus: record.dinnerStatus || 'A',
+          });
+      });
 
       // Set the response headers to force a download
       res.setHeader(
