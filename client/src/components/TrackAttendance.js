@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import axios from 'axios';
 import './TrackAttendance.css'; // Add CSS styling
 
@@ -168,7 +168,7 @@ const TrackAttendance = () => {
                     ) : (
                         <input
                             type="text"
-                            placeholder={Search by ${searchColumn}}
+                            placeholder={`Search by ${searchColumn}`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="search-input"
