@@ -87,37 +87,30 @@ const TrackAttendance = () => {
 
     // Determine the meal based on the time
     const getMealType = (time) => {
-    // Update the regex to make seconds optional
-    const timeParts = time.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)/i);
-    if (!timeParts) {
-        console.log(`Unexpected time format: ${time}`); // Log unexpected formats for debugging
-        return 'No Meal';
-    }
+        const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
+        if (!timeParts) return 'No Meal';
 
-    let hours = parseInt(timeParts[1], 10);
-    const minutes = parseInt(timeParts[2], 10);
-    const period = timeParts[4].toUpperCase(); // AM or PM
+        let hours = parseInt(timeParts[1]);
+        const minutes = parseInt(timeParts[2]);
+        const period = timeParts[3]; // AM or PM
 
-    // Convert to 24-hour format
-    if (period === 'PM' && hours < 12) hours += 12;
-    if (period === 'AM' && hours === 12) hours = 0;
+        if (period === 'PM' && hours < 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
 
-    const totalMinutes = (hours * 60) + minutes;
+        const totalMinutes = (hours * 60) + minutes;
 
-    // Meal time ranges in total minutes
-    if (totalMinutes >= 450 && totalMinutes < 570) { // Breakfast 7:30 AM to 9:30 AM
-        return 'Breakfast';
-    } else if (totalMinutes >= 720 && totalMinutes < 840) { // Lunch 12:00 PM to 2:00 PM
-        return 'Lunch';
-    } else if (totalMinutes >= 1020 && totalMinutes < 1080) { // Snacks 5:00 PM to 6:00 PM
-        return 'Snacks';
-    } else if (totalMinutes >= 1170 && totalMinutes < 1260) { // Dinner 7:30 PM to 9:00 PM
-        return 'Dinner';
-    } else {
-        return 'No Meal';
-    }
-};
-
+        if (totalMinutes >= 450 && totalMinutes < 570) { // Breakfast 7:30 AM to 9:30 AM
+            return 'Breakfast';
+        } else if (totalMinutes >= 720 && totalMinutes < 840) { // Lunch 12:00 PM to 2:00 PM
+            return 'Lunch';
+        } else if (totalMinutes >= 1020 && totalMinutes < 1080) { // Snacks 5:00 PM to 6:00 PM
+            return 'Snacks';
+        } else if (totalMinutes >= 1170 && totalMinutes < 1260) { // Dinner 7:30 PM to 9:00 PM
+            return 'Dinner';
+        } else {
+            return 'No Meal';
+        }
+    };
 
     // Get Meal Status based on previous statuses and current meal
     const getMealStatus = (record, mealType) => {
