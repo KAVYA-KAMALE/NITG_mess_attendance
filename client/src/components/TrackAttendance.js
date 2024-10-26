@@ -94,6 +94,7 @@ const TrackAttendance = () => {
         const minutes = parseInt(timeParts[2]);
         const period = timeParts[3]; // AM or PM
 
+        // Convert time to 24-hour format
         if (period === 'PM' && hours < 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
 
