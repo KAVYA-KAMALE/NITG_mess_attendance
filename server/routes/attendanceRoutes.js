@@ -49,17 +49,34 @@ router.post('/mark-attendance', async (req, res) => {
 });
 
 
-// Route to get all attendance records
+// Route to get all attendance records with IST time
 router.get('/track-attendance', async (req, res) => {
   try {
     const attendanceRecords = await Attendance.find();
-    res.status(200).json(attendanceRecords); // Return all attendance records, including time
+
+    // Convert each record's time to IST
+    const recordsWithIST = attendanceRecords.map(record => {
+      const istTime = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }).format(new Date(record.time));
+      
+      return {
+        ...record.toObject(),
+        time: istTime
+      };
+    });
+
+    res.status(200).json(recordsWithIST); // Return all attendance records with IST time
   } catch (error) {
     res.status(500).send('Error fetching attendance records: ' + error.message);
   }
 });
 
-// Route to export attendance data as an Excel file
+// Route to export attendance data as an Excel file with IST time
 router.get('/export-attendance', async (req, res) => {
   try {
       // Fetch attendance data from the database
@@ -83,42 +100,49 @@ router.get('/export-attendance', async (req, res) => {
       ];
 
       // Helper function to determine meal type from time
+      const getMealType = (time) => {
+          const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
+          if (!timeParts) return 'No Meal';
 
-     // Helper function to determine meal type from time
-const getMealType = (time) => {
-    const [hours, minutes] = time.split(':').map(Number); // Split time as "HH:MM:SS AM/PM" and convert hours, minutes to integers
+          let hours = parseInt(timeParts[1]);
+          const minutes = parseInt(timeParts[2]);
+          const period = timeParts[3]; // AM or PM
 
-    const totalMinutes = hours * 60 + minutes; // Total minutes since midnight
+          if (period === 'PM' && hours < 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
 
-    // Breakfast: 7:30 AM to 9:30 AM
-    if (totalMinutes >= 450 && totalMinutes < 570) return 'Breakfast';
-    // Lunch: 12:00 PM to 2:00 PM
-    if (totalMinutes >= 720 && totalMinutes < 840) return 'Lunch';
-    // Snacks: 5:00 PM to 6:00 PM
-    if (totalMinutes >= 1020 && totalMinutes < 1080) return 'Snacks';
-    // Dinner: 7:30 PM to 9:00 PM
-    if (totalMinutes >= 1170 && totalMinutes < 1260) return 'Dinner';
+          const totalMinutes = (hours * 60) + minutes;
 
-    return 'No Meal';
-};
+          if (totalMinutes >= 450 && totalMinutes < 570) return 'Breakfast'; // 7:30 AM to 9:30 AM
+          if (totalMinutes >= 720 && totalMinutes < 840) return 'Lunch';     // 12:00 PM to 2:00 PM
+          if (totalMinutes >= 1020 && totalMinutes < 1080) return 'Snacks';  // 5:00 PM to 6:00 PM
+          if (totalMinutes >= 1170 && totalMinutes < 1260) return 'Dinner';  // 7:30 PM to 9:00 PM
+          return 'No Meal';
+      };
 
-// Add rows to the worksheet from attendance records
-attendanceRecords.forEach(record => {
-    const mealType = getMealType(record.time);
+      // Add rows to the worksheet from attendance records, converting times to IST
+      attendanceRecords.forEach(record => {
+          const istTime = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Kolkata',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          }).format(new Date(record.time));
 
-    worksheet.addRow({
-        uniqueId: record.uniqueId,
-        rollNo: record.rollNo,
-        date: new Date(record.date).toLocaleDateString(),
-        time: record.time,
-        mealType: mealType,
-        breakfastStatus: mealType === 'Breakfast' ? 'P' : 'A',
-        lunchStatus: mealType === 'Lunch' ? 'P' : 'A',
-        snacksStatus: mealType === 'Snacks' ? 'P' : 'A',
-        dinnerStatus: mealType === 'Dinner' ? 'P' : 'A',
-    });
-});
-
+          const mealType = getMealType(istTime);
+          worksheet.addRow({
+              uniqueId: record.uniqueId,
+              rollNo: record.rollNo,
+              date: new Date(record.date).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' }),
+              time: istTime,
+              mealType: mealType,
+              breakfastStatus: record.breakfastStatus || 'A',
+              lunchStatus: record.lunchStatus || 'A',
+              snacksStatus: record.snacksStatus || 'A',
+              dinnerStatus: record.dinnerStatus || 'A',
+          });
+      });
 
       // Set the response headers to force a download
       res.setHeader(
@@ -138,6 +162,7 @@ attendanceRecords.forEach(record => {
       res.status(500).json({ error: 'Failed to export attendance data' });
   }
 });
+
 
 
 
