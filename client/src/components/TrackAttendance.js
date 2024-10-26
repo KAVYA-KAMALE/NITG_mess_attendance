@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import axios from 'axios';
 import './TrackAttendance.css'; // Add CSS styling
 
@@ -8,26 +8,6 @@ const TrackAttendance = () => {
     const [searchQuery, setSearchQuery] = useState(''); // State for search input
     const [searchColumn, setSearchColumn] = useState('uniqueId'); // State for chosen column
     const [selectedDate, setSelectedDate] = useState(''); // State for date selection
-
-    // Helper function to format date in dd/mm/yyyy format
-    const formatDate = (dateString) => {
-        return new Intl.DateTimeFormat('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        }).format(new Date(dateString));
-    };
-
-    // Helper function to format time in hh:mm:ss AM/PM format
-    const formatTime = (timeString) => {
-        return new Intl.DateTimeFormat('en-GB', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-            timeZone: 'Asia/Kolkata'
-        }).format(new Date(timeString));
-    };
 
     // Fetch attendance records from the API
     const fetchAttendanceRecords = async () => {
@@ -62,10 +42,10 @@ const TrackAttendance = () => {
                     case 'rollNo':
                         return record.rollNo && record.rollNo.includes(query);
                     case 'date':
-                        const inputDate = new Date(query).toLocaleDateString('en-GB');
-                        const recordDate = new Date(record.date).toLocaleDateString('en-GB');
+                        const inputDate = new Date(query).toLocaleDateString();  // Format as mm/dd/yyyy
+                        const recordDate = new Date(record.date).toLocaleDateString();  // Also format as mm/dd/yyyy
 
-                        return recordDate === inputDate;
+                        return recordDate === inputDate;  // Compare formatted dates
                     case 'meal':
                         const mealType = getMealType(record.time);
                         return mealType && mealType.toLowerCase().includes(query.toLowerCase());
@@ -94,13 +74,28 @@ const TrackAttendance = () => {
     // Group attendance records by date
     const groupByDate = (records) => {
         return records.reduce((groups, record) => {
-            const formattedDate = formatDate(record.date);
-            if (!groups[formattedDate]) {
-                groups[formattedDate] = [];
+            const date = new Date(record.date).toLocaleDateString();
+            if (!groups[date]) {
+                groups[date] = [];
             }
-            groups[formattedDate].push(record);
+            groups[date].push(record);
             return groups;
         }, {});
+    };
+
+    // Convert time to 12-hour format with AM/PM
+    const formatTime = (time) => {
+        const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2}/);
+        if (!timeParts) return time; // Return original time if format is unexpected
+
+        let hours = parseInt(timeParts[1]);
+        const minutes = parseInt(timeParts[2]);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+
+        hours = hours % 12;
+        hours = hours ? hours : 12; // The hour '0' should be '12'
+
+        return `${hours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
     };
 
     // Determine the meal based on the time
@@ -134,6 +129,7 @@ const TrackAttendance = () => {
     const getMealStatus = (record, mealType) => {
         const currentMealType = getMealType(record.time);
 
+        // Check for previous meal statuses
         let breakfastStatus = record.breakfastStatus || 'A'; // Default to A if not set
         let lunchStatus = record.lunchStatus || 'A'; // Default to A if not set
         let snacksStatus = record.snacksStatus || 'A'; // Default to A if not set
@@ -141,13 +137,13 @@ const TrackAttendance = () => {
 
         switch (mealType) {
             case 'Breakfast':
-                return currentMealType === 'Breakfast' ? 'P' : breakfastStatus;
+                return currentMealType === 'Breakfast' ? 'P' : breakfastStatus; // 'P' if Breakfast, else keep previous status
             case 'Lunch':
-                return currentMealType === 'Lunch' ? 'P' : lunchStatus;
+                return currentMealType === 'Lunch' ? 'P' : lunchStatus;      // 'P' if Lunch, else keep previous status
             case 'Snacks':
-                return currentMealType === 'Snacks' ? 'P' : snacksStatus;
+                return currentMealType === 'Snacks' ? 'P' : snacksStatus;     // 'P' if Snacks, else keep previous status
             case 'Dinner':
-                return currentMealType === 'Dinner' ? 'P' : dinnerStatus;
+                return currentMealType === 'Dinner' ? 'P' : dinnerStatus;     // 'P' if Dinner, else keep previous status
             default:
                 return 'No Meal';
         }
@@ -234,10 +230,10 @@ const TrackAttendance = () => {
                     </div>
                 ))
             ) : (
-                <p>No attendance records found</p>
+                <p>No attendance records found.</p>
             )}
 
-            <button onClick={downloadExcel} className="download-button">Download as Excel</button>
+            <button className="download-button" onClick={downloadExcel}>Download Excel</button>
         </div>
     );
 };
