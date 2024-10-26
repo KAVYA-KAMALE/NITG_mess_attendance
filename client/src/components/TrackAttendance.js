@@ -83,21 +83,6 @@ const TrackAttendance = () => {
         }, {});
     };
 
-    // Convert time to 12-hour format with AM/PM
-    const formatTime = (time) => {
-        const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2}/);
-        if (!timeParts) return time; // Return original time if format is unexpected
-
-        let hours = parseInt(timeParts[1]);
-        const minutes = parseInt(timeParts[2]);
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-
-        hours = hours % 12;
-        hours = hours ? hours : 12; // The hour '0' should be '12'
-
-        return `${hours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
-    };
-
     // Determine the meal based on the time
     const getMealType = (time) => {
         const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
@@ -217,7 +202,7 @@ const TrackAttendance = () => {
                                     <tr key={record._id}>
                                         <td>{record.uniqueId}</td>
                                         <td>{record.rollNo}</td>
-                                        <td>{formatTime(record.time)}</td> {/* Format time here */}
+                                        <td>{record.time}</td>
                                         <td>{getMealType(record.time)}</td>
                                         <td>{getMealStatus(record, 'Breakfast')}</td>
                                         <td>{getMealStatus(record, 'Lunch')}</td>
@@ -230,10 +215,10 @@ const TrackAttendance = () => {
                     </div>
                 ))
             ) : (
-                <p>No attendance records found.</p>
+                <p>No attendance records found</p>
             )}
 
-            <button className="download-button" onClick={downloadExcel}>Download Excel</button>
+            <button onClick={downloadExcel} className="download-button">Download as Excel</button>
         </div>
     );
 };
