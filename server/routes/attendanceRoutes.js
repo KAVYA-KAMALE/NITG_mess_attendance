@@ -84,41 +84,41 @@ router.get('/export-attendance', async (req, res) => {
 
       // Helper function to determine meal type from time
 
-     const getMealType = (time) => {
-          const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
-          if (!timeParts) return 'No Meal';
+     // Helper function to determine meal type from time
+const getMealType = (time) => {
+    const [hours, minutes] = time.split(':').map(Number); // Split time as "HH:MM:SS AM/PM" and convert hours, minutes to integers
 
-          let hours = parseInt(timeParts[1]);
-          const minutes = parseInt(timeParts[2]);
-          const period = timeParts[3]; // AM or PM
+    const totalMinutes = hours * 60 + minutes; // Total minutes since midnight
 
-          if (period === 'PM' && hours < 12) hours += 12;
-          if (period === 'AM' && hours === 12) hours = 0;
+    // Breakfast: 7:30 AM to 9:30 AM
+    if (totalMinutes >= 450 && totalMinutes < 570) return 'Breakfast';
+    // Lunch: 12:00 PM to 2:00 PM
+    if (totalMinutes >= 720 && totalMinutes < 840) return 'Lunch';
+    // Snacks: 5:00 PM to 6:00 PM
+    if (totalMinutes >= 1020 && totalMinutes < 1080) return 'Snacks';
+    // Dinner: 7:30 PM to 9:00 PM
+    if (totalMinutes >= 1170 && totalMinutes < 1260) return 'Dinner';
 
-          const totalMinutes = (hours * 60) + minutes;
+    return 'No Meal';
+};
 
-          if (totalMinutes >= 450 && totalMinutes < 570) return 'Breakfast'; // 7:30 AM to 9:30 AM
-          if (totalMinutes >= 720 && totalMinutes < 840) return 'Lunch';     // 12:00 PM to 2:00 PM
-          if (totalMinutes >= 1020 && totalMinutes < 1080) return 'Snacks';  // 5:00 PM to 6:00 PM
-          if (totalMinutes >= 1170 && totalMinutes < 1260) return 'Dinner';  // 7:30 PM to 9:00 PM
-          return 'No Meal';
-      };
+// Add rows to the worksheet from attendance records
+attendanceRecords.forEach(record => {
+    const mealType = getMealType(record.time);
 
-      // Add rows to the worksheet from attendance records
-      attendanceRecords.forEach(record => {
-          const mealType = getMealType(record.time);
-          worksheet.addRow({
-              uniqueId: record.uniqueId,
-              rollNo: record.rollNo,
-              date: new Date(record.date).toLocaleDateString(),
-              time: record.time,
-              mealType: mealType,
-              breakfastStatus: record.breakfastStatus || 'A',
-              lunchStatus: record.lunchStatus || 'A',
-              snacksStatus: record.snacksStatus || 'A',
-              dinnerStatus: record.dinnerStatus || 'A',
-          });
-      });
+    worksheet.addRow({
+        uniqueId: record.uniqueId,
+        rollNo: record.rollNo,
+        date: new Date(record.date).toLocaleDateString(),
+        time: record.time,
+        mealType: mealType,
+        breakfastStatus: mealType === 'Breakfast' ? 'P' : 'A',
+        lunchStatus: mealType === 'Lunch' ? 'P' : 'A',
+        snacksStatus: mealType === 'Snacks' ? 'P' : 'A',
+        dinnerStatus: mealType === 'Dinner' ? 'P' : 'A',
+    });
+});
+
 
       // Set the response headers to force a download
       res.setHeader(
