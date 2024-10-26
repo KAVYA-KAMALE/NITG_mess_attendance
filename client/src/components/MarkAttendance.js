@@ -2,38 +2,50 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import './MarkAttendance.css';
 
-const MarkAttendance = () => {
+const MarkAttendance = ({ onAttendanceMarked }) => { // Add prop for callback
     const [uniqueId, setUniqueId] = useState('');
     const [message, setMessage] = useState('');
-    const inputRef = useRef(null); // Ref to manage focus on input field
+    const inputRef = useRef(null);
+
+    const determineMealType = () => {
+        const currentTime = new Date();
+        const hours = currentTime.getHours();
+        const minutes = currentTime.getMinutes();
+
+        if (hours >= 7 && hours < 9) return 'Breakfast';
+        if (hours >= 12 && hours < 14) return 'Lunch';
+        if (hours >= 17 && hours < 18) return 'Snacks';
+        if (hours >= 19 && hours < 21) return 'Dinner';
+        return 'No Meal';
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Submitting:', { uniqueId });
-
         if (!uniqueId.trim()) {
             setMessage('Please enter the Unique ID.');
             return;
         }
 
         const currentDateTime = new Date();
-        const date = currentDateTime.toLocaleDateString(); // Get date in DD/MM/YYYY format
-        const time = currentDateTime.toLocaleTimeString(); // Get time in HH:MM:SS format
+        const date = currentDateTime.toLocaleDateString();
+        const time = currentDateTime.toLocaleTimeString();
+        const mealType = determineMealType();
 
         try {
-            // Send both date and time to the API
-            const markAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/mark-attendance`;
-            const response = await axios.post(markAttendanceEndpoint, { 
+            const response = await axios.post(`${process.env.REACT_APP_LINK}/api/attendance/mark-attendance`, { 
                 uniqueId, 
                 status: 'Present',
                 date,
-                time
+                time,
+                meal: mealType // Send meal type for specific attendance
             });
-            setMessage(response.data);
 
-            // Clear input field and set focus back to it for next input
+            setMessage(response.data);
             setUniqueId('');
-            inputRef.current.focus(); // Refocus input field automatically
+            inputRef.current.focus();
+
+            if (onAttendanceMarked) onAttendanceMarked(); // Trigger refresh in TrackAttendance
+
         } catch (error) {
             console.error('Error:', error.response?.data || error.message);
             setMessage(error.response?.data || 'Error marking attendance');
@@ -43,13 +55,13 @@ const MarkAttendance = () => {
     return (
         <form onSubmit={handleSubmit}>
             <input
-                ref={inputRef} // Attach ref to input field
+                ref={inputRef}
                 type="text"
                 value={uniqueId}
                 onChange={(e) => setUniqueId(e.target.value)}
                 placeholder="Enter Unique ID"
                 required
-                autoFocus // Automatically focus on component load
+                autoFocus
             />
             <div className="button-group">
                 <button type="submit">Mark Attendance</button>
