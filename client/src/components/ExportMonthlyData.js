@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
-import { saveAs } from 'file-saver'; // For saving the file
-import './ExportMonthlyData.css'; // Import the CSS file
+import { saveAs } from 'file-saver';
+import './ExportMonthlyData.css';
 
 const ExportMonthlyData = () => {
     const [attendanceRecords, setAttendanceRecords] = useState([]);
@@ -42,7 +42,6 @@ const ExportMonthlyData = () => {
 
     useEffect(() => {
         fetchAttendanceRecords();
-        // eslint-disable-next-line
     }, []);
 
     const groupByStudent = (records) => {
@@ -53,10 +52,10 @@ const ExportMonthlyData = () => {
             }
             const date = new Date(record.date).toLocaleDateString();
             groups[key][date] = {
-                breakfastStatus: getMealStatus(record, 'Breakfast'),
-                lunchStatus: getMealStatus(record, 'Lunch'),
-                snacksStatus: getMealStatus(record, 'Snacks'),
-                dinnerStatus: getMealStatus(record, 'Dinner'),
+                breakfastStatus: getMealStatus(records, record, 'Breakfast'),
+                lunchStatus: getMealStatus(records, record, 'Lunch'),
+                snacksStatus: getMealStatus(records, record, 'Snacks'),
+                dinnerStatus: getMealStatus(records, record, 'Dinner'),
             };
             return groups;
         }, {});
@@ -87,33 +86,49 @@ const ExportMonthlyData = () => {
     };
 
     const getMealType = (time) => {
-        const timeParts = time.match(/(\d{1,2}):(\d{2}):\d{2} (\w{2})/);
+        const timeParts = time.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)/i);
         if (!timeParts) return 'No Meal';
-        let hours = parseInt(timeParts[1]);
-        const minutes = parseInt(timeParts[2]);
-        const period = timeParts[3];
+        let hours = parseInt(timeParts[1], 10);
+        const minutes = parseInt(timeParts[2], 10);
+        const period = timeParts[4].toUpperCase();
         if (period === 'PM' && hours < 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
         const totalMinutes = hours * 60 + minutes;
-        if (totalMinutes >= 450 && totalMinutes < 570) {
-            return 'Breakfast';
-        } else if (totalMinutes >= 720 && totalMinutes < 840) {
-            return 'Lunch';
-        } else if (totalMinutes >= 1020 && totalMinutes < 1080) {
-            return 'Snacks';
-        } else if (totalMinutes >= 1170 && totalMinutes < 1260) {
-            return 'Dinner';
-        } else {
-            return 'No Meal';
-        }
+        if (totalMinutes >= 450 && totalMinutes < 570) return 'Breakfast';
+        if (totalMinutes >= 720 && totalMinutes < 840) return 'Lunch';
+        if (totalMinutes >= 1020 && totalMinutes < 1080) return 'Snacks';
+        if (totalMinutes >= 1170 && totalMinutes < 1260) return 'Dinner';
+        return 'No Meal';
     };
 
-    const getMealStatus = (record, mealType) => {
+    const getMealStatus = (records, record, mealType) => {
+        const date = new Date(record.date).toLocaleDateString();
         const currentMealType = getMealType(record.time);
-        let breakfastStatus = record.breakfastStatus || 'A'; 
-        let lunchStatus = record.lunchStatus || 'A'; 
-        let snacksStatus = record.snacksStatus || 'A'; 
-        let dinnerStatus = record.dinnerStatus || 'A'; 
+
+        const previousRecords = records.filter(
+            (r) => new Date(r.date).toLocaleDateString() === date && r.uniqueId === record.uniqueId
+        );
+
+        let breakfastStatus = 'A';
+        let lunchStatus = 'A';
+        let snacksStatus = 'A';
+        let dinnerStatus = 'A';
+
+        previousRecords.forEach((prevRecord) => {
+            if (getMealType(prevRecord.time) === 'Breakfast') {
+                breakfastStatus = 'P';
+            }
+            if (getMealType(prevRecord.time) === 'Lunch') {
+                lunchStatus = 'P';
+            }
+            if (getMealType(prevRecord.time) === 'Snacks') {
+                snacksStatus = 'P';
+            }
+            if (getMealType(prevRecord.time) === 'Dinner') {
+                dinnerStatus = 'P';
+            }
+        });
+
         switch (mealType) {
             case 'Breakfast':
                 return currentMealType === 'Breakfast' ? 'P' : breakfastStatus;
@@ -124,25 +139,22 @@ const ExportMonthlyData = () => {
             case 'Dinner':
                 return currentMealType === 'Dinner' ? 'P' : dinnerStatus;
             default:
-                return 'No Meal';
+                return 'A';
         }
     };
 
     const studentRecords = groupByStudent(attendanceRecords);
 
-    // Function to handle downloading the table as an Excel file
     const downloadExcel = async () => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Monthly Attendance');
 
-        // Adding headers
         const headerRow = ['Roll No', 'Name', 'Semester', 'Fee Paid'];
         filteredDates.forEach(date => {
             headerRow.push(`${date} Breakfast`, `${date} Lunch`, `${date} Snacks`, `${date} Dinner`);
         });
         worksheet.addRow(headerRow);
 
-        // Adding data rows
         Object.keys(studentRecords).forEach(studentId => {
             const student = studentDetails[studentId] || {};
             const row = [
@@ -164,7 +176,6 @@ const ExportMonthlyData = () => {
             worksheet.addRow(row);
         });
 
-        // Export the Excel file
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         saveAs(blob, 'MonthlyAttendance.xlsx');
@@ -175,7 +186,6 @@ const ExportMonthlyData = () => {
             <h2>Export Monthly Data</h2>
             {error && <p className="error-message">{error}</p>}
 
-            {/* Date range input fields */}
             <div className="date-filter-container">
                 <label htmlFor="fromDate">From:</label>
                 <input 
@@ -229,18 +239,10 @@ const ExportMonthlyData = () => {
                             <td>{studentDetails[studentId]?.feePaid || 'N/A'}</td>
                             {filteredDates.map(date => (
                                 <>
-                                    <td key={`${studentId}-${date}-breakfast`}>
-                                        {studentRecords[studentId][date]?.breakfastStatus || 'A'}
-                                    </td>
-                                    <td key={`${studentId}-${date}-lunch`}>
-                                        {studentRecords[studentId][date]?.lunchStatus || 'A'}
-                                    </td>
-                                    <td key={`${studentId}-${date}-snacks`}>
-                                        {studentRecords[studentId][date]?.snacksStatus || 'A'}
-                                    </td>
-                                    <td key={`${studentId}-${date}-dinner`}>
-                                        {studentRecords[studentId][date]?.dinnerStatus || 'A'}
-                                    </td>
+                                    <td>{studentRecords[studentId][date]?.breakfastStatus || 'A'}</td>
+                                    <td>{studentRecords[studentId][date]?.lunchStatus || 'A'}</td>
+                                    <td>{studentRecords[studentId][date]?.snacksStatus || 'A'}</td>
+                                    <td>{studentRecords[studentId][date]?.dinnerStatus || 'A'}</td>
                                 </>
                             ))}
                         </tr>
@@ -248,7 +250,7 @@ const ExportMonthlyData = () => {
                 </tbody>
             </table>
 
-            <button onClick={downloadExcel}>Download Excel</button>
+            <button onClick={downloadExcel} className="download-button">Download Excel</button>
         </div>
     );
 };
