@@ -10,7 +10,7 @@ const TrackAttendance = () => {
     const [selectedDate, setSelectedDate] = useState(''); // State for date selection
 
     // Fetch attendance records from the API
-    const fetchAttendanceRecords = async () => { 
+    const fetchAttendanceRecords = async () => {
         try {
             const trackAttendanceEndpoint = `${process.env.REACT_APP_LINK}/api/attendance/track-attendance`;
             const response = await axios.get(trackAttendanceEndpoint);
@@ -120,28 +120,54 @@ const getMealType = (time) => {
 
 
     // Get Meal Status based on previous statuses and current meal
-    const getMealStatus = (record, mealType) => {
-        const currentMealType = getMealType(record.time);
+    // Revised getMealStatus function to carry over status for each meal type
+const getMealStatus = (records, record, mealType) => {
+    const date = new Date(record.date).toLocaleDateString();
+    const currentMealType = getMealType(record.time);
 
-        // Check for previous meal statuses
-        let breakfastStatus = record.breakfastStatus || 'A'; // Default to A if not set
-        let lunchStatus = record.lunchStatus || 'A'; // Default to A if not set
-        let snacksStatus = record.snacksStatus || 'A'; // Default to A if not set
-        let dinnerStatus = record.dinnerStatus || 'A'; // Default to A if not set
+    // Find any records from the same date and with a previous meal status for the specified meal type
+    const previousRecords = records.filter(
+        (r) => new Date(r.date).toLocaleDateString() === date && r.uniqueId === record.uniqueId
+    );
 
-        switch (mealType) {
-            case 'Breakfast':
-                return currentMealType === 'Breakfast' ? 'P' : breakfastStatus; // 'P' if Breakfast, else keep previous status
-            case 'Lunch':
-                return currentMealType === 'Lunch' ? 'P' : lunchStatus;      // 'P' if Lunch, else keep previous status
-            case 'Snacks':
-                return currentMealType === 'Snacks' ? 'P' : snacksStatus;     // 'P' if Snacks, else keep previous status
-            case 'Dinner':
-                return currentMealType === 'Dinner' ? 'P' : dinnerStatus;     // 'P' if Dinner, else keep previous status
-            default:
-                return 'No Meal';
+    // Initialize status variables for each meal type
+    let breakfastStatus = 'A';
+    let lunchStatus = 'A';
+    let snacksStatus = 'A';
+    let dinnerStatus = 'A';
+
+    // Loop through previous records to set status if already present
+    previousRecords.forEach((prevRecord) => {
+        if (getMealType(prevRecord.time) === 'Breakfast') {
+            breakfastStatus = 'P';
         }
-    };
+        if (getMealType(prevRecord.time) === 'Lunch') {
+            lunchStatus = 'P';
+        }
+        if (getMealType(prevRecord.time) === 'Snacks') {
+            snacksStatus = 'P';
+        }
+        if (getMealType(prevRecord.time) === 'Dinner') {
+            dinnerStatus = 'P';
+        }
+    });
+
+    // Set status for the current meal based on the time
+    switch (mealType) {
+        case 'Breakfast':
+            return currentMealType === 'Breakfast' ? 'P' : breakfastStatus;
+        case 'Lunch':
+            return currentMealType === 'Lunch' ? 'P' : lunchStatus;
+        case 'Snacks':
+            return currentMealType === 'Snacks' ? 'P' : snacksStatus;
+        case 'Dinner':
+            return currentMealType === 'Dinner' ? 'P' : dinnerStatus;
+        default:
+            return 'A';
+    }
+};
+
+        
 
     const groupedRecords = groupByDate(attendanceRecords);
 
@@ -207,19 +233,19 @@ const getMealType = (time) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {groupedRecords[date].map(record => (
-                                    <tr key={record._id}>
-                                        <td>{record.uniqueId}</td>
-                                        <td>{record.rollNo}</td>
-                                        <td>{record.time}</td>
-                                        <td>{getMealType(record.time)}</td>
-                                        <td>{getMealStatus(record, 'Breakfast')}</td>
-                                        <td>{getMealStatus(record, 'Lunch')}</td>
-                                        <td>{getMealStatus(record, 'Snacks')}</td>
-                                        <td>{getMealStatus(record, 'Dinner')}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
+    {groupedRecords[date].map(record => (
+        <tr key={record._id}>
+            <td>{record.uniqueId}</td>
+            <td>{record.rollNo}</td>
+            <td>{record.time}</td>
+            <td>{getMealType(record.time)}</td>
+            <td>{getMealStatus(attendanceRecords, record, 'Breakfast')}</td>
+            <td>{getMealStatus(attendanceRecords, record, 'Lunch')}</td>
+            <td>{getMealStatus(attendanceRecords, record, 'Snacks')}</td>
+            <td>{getMealStatus(attendanceRecords, record, 'Dinner')}</td>
+        </tr>
+    ))}
+</tbody>
                         </table>
                     </div>
                 ))
@@ -233,4 +259,3 @@ const getMealType = (time) => {
 };
 
 export default TrackAttendance;
-  
