@@ -4,7 +4,7 @@ const Student = require('../models/Student');
 const excel = require('exceljs'); // Add exceljs for Excel export
 const moment = require('moment'); // For date manipulation
 const router = express.Router();
-
+ 
 // Route to mark attendance
 router.post('/mark-attendance', async (req, res) => {
   const { uniqueId, status } = req.body;
